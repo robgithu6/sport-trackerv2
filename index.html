@@ -237,7 +237,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     <!-- GOALS PAGE -->
     <div class="page" id="page-goals">
       <div id="yearTotalsContainer"></div>
-      <div class="section-title">Maanddoelen</div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;padding-bottom:8px">
+        <button class="week-nav-btn" id="prevMonthBtn" onclick="shiftMonth(-1)" style="width:28px;height:28px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <span id="monthNavLabel" style="flex:1;text-align:center">Huidige maand</span>
+        <button class="week-nav-btn" id="nextMonthBtn" onclick="shiftMonth(1)" style="width:28px;height:28px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
       <div id="monthGoalsContainer"></div>
     </div>
 
@@ -270,7 +274,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 <div class="modal-overlay" id="addModal" onclick="closeAddModal(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="addModalTitle">Activiteit toevoegen</div>
+    <div class="modal-title" id="addModalTitle">Toevoegen</div>
 
     <!-- Activity picker -->
     <div id="addActPicker" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px"></div>
@@ -278,22 +282,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     <!-- Day select -->
     <div class="day-select-grid" id="daySelectGrid"></div>
 
-    <!-- Done toggle -->
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
-      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)" id="doneToggleLabel">Gepland</span>
-      <div id="doneToggle" onclick="toggleDoneMode()" style="width:44px;height:24px;border-radius:12px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s">
-        <div id="doneToggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s"></div>
+    <!-- Done toggle + completion fields in one card -->
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0" id="doneToggleRow">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)" id="doneToggleLabel">Gepland</span>
+        <div id="doneToggle" onclick="toggleDoneMode()" style="width:44px;height:24px;border-radius:12px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s">
+          <div id="doneToggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:transform .2s"></div>
+        </div>
+      </div>
+
+      <!-- Completion fields (hidden by default) -->
+      <div id="addDoneFields" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div class="stat-grid" id="addDoneGrid"></div>
       </div>
     </div>
 
-    <!-- Completion fields (hidden by default) -->
-    <div id="addDoneFields" style="display:none">
-      <div class="stat-grid" id="addDoneGrid"></div>
-    </div>
-
     <div class="modal-row">
-      <button class="btn-ghost" onclick="closeAddModal()">Annuleer</button>
-      <button class="btn-primary" style="flex:2" onclick="saveActivity()">Opslaan</button>
+      <button class="btn-primary" style="flex:1" onclick="saveActivity()">Opslaan</button>
+      <button class="btn-ghost" style="flex:1" onclick="closeAddModal()">Annuleer</button>
     </div>
   </div>
 </div>
@@ -315,17 +321,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
     <input type="hidden" id="editActivityId">
 
     <!-- Activity picker -->
-    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">Activiteit</div>
     <div id="editActPicker" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px"></div>
 
-    <div class="modal-row">
-      <button class="btn-ghost" onclick="closeEditModal()" style="flex:1">Annuleer</button>
+    <div id="editSaveRow" class="modal-row">
       <button class="btn-primary" onclick="saveEdit()" style="flex:1">Opslaan</button>
+      <button class="btn-ghost" onclick="closeEditModal()" style="flex:1" id="editCancelBtn">Annuleer</button>
     </div>
-    <div style="margin-top:8px">
-      <button onclick="confirmDelete()" style="width:100%;padding:12px;background:transparent;border:1px solid #3a1515;border-radius:8px;color:#ff5555;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer">
+    <div id="editBottomActions" style="margin-top:8px;display:none;gap:8px" class="modal-row">
+      <button class="btn-primary" onclick="saveEdit()" style="flex:1">Opslaan</button>
+      <button onclick="confirmDelete()" style="flex:1;padding:14px;background:transparent;border:1px solid #3a1515;border-radius:8px;color:#ff5555;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-        Verwijderen
+        Verwijder
       </button>
     </div>
   </div>
@@ -345,8 +351,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       </div>
     </div>
     <div class="modal-row">
-      <button class="btn-ghost" onclick="closeGoalEdit()">Annuleer</button>
       <button class="btn-primary" style="flex:2" onclick="saveGoalEdit()">Opslaan</button>
+      <button class="btn-ghost" onclick="closeGoalEdit()">Annuleer</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="deleteConfirmModal" onclick="closeDeleteConfirm(event)">
+  <div class="modal" style="padding-bottom:calc(16px + var(--safe-bottom))">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:8px 0 16px">
+      <div style="font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px">Activiteit verwijderen?</div>
+    </div>
+    <input type="hidden" id="deleteConfirmId">
+    <div style="display:flex;gap:8px">
+      <button onclick="executeDelete()" style="flex:1;padding:14px;background:#3a1515;border:1px solid #ff444460;border-radius:8px;color:#ff5555;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;cursor:pointer">Ja, verwijder</button>
+      <button onclick="closeDeleteConfirm()" class="btn-ghost" style="flex:1">Annuleer</button>
     </div>
   </div>
 </div>
@@ -374,8 +395,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       <div class="stat-field"><div class="stat-label" style="color:var(--cat-fitness)">Fitness (sess.)</div><input type="number" class="stat-input" id="yg_fitness" placeholder="0"></div>
     </div>
     <div class="modal-row">
-      <button class="btn-ghost" onclick="closeYearGoalModal()">Annuleer</button>
       <button class="btn-primary" style="flex:2" onclick="saveYearGoals()">Opslaan</button>
+      <button class="btn-ghost" onclick="closeYearGoalModal()">Annuleer</button>
     </div>
   </div>
 </div>
@@ -538,19 +559,48 @@ function updateWeekNav() {
   document.getElementById('prevWeekBtn').disabled = weekOffset<=-8;
   document.getElementById('nextWeekBtn').disabled = weekOffset>=4;
 }
-function shiftWeek(d) { weekOffset+=d; updateWeekNav(); renderWeek(); }
-function goToToday()  { weekOffset=0;  updateWeekNav(); renderWeek(); }
+function shiftWeek(d) { weekOffset+=d; updateWeekNav(); renderWeek(); renderGoals(); }
+function goToToday()  { weekOffset=0;  updateWeekNav(); renderWeek(); renderGoals(); }
 
 // ── PROGRESS HELPERS ─────────────────────────────────────────────────────────
+let monthOffset = 0; // 0 = current month, -1 = last month, etc.
+
+function getViewMonthDate() {
+  const d = new Date();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + monthOffset);
+  return d;
+}
+
+function shiftMonth(dir) {
+  monthOffset += dir;
+  if (monthOffset > 0) monthOffset = 0; // can't go to future months
+  updateMonthNav();
+  renderGoals();
+}
+
+function updateMonthNav() {
+  const d = getViewMonthDate();
+  const label = monthOffset === 0
+    ? 'Huidige maand'
+    : `${MONTHS_NL[d.getMonth()].charAt(0).toUpperCase() + MONTHS_NL[d.getMonth()].slice(1)} ${d.getFullYear()}`;
+  const el = document.getElementById('monthNavLabel');
+  if (el) el.textContent = label;
+  const nextBtn = document.getElementById('nextMonthBtn');
+  if (nextBtn) nextBtn.disabled = monthOffset >= 0;
+  const prevBtn = document.getElementById('prevMonthBtn');
+  if (prevBtn) prevBtn.disabled = monthOffset <= -24;
+}
+
 function getCatProgress(period) {
   const data = getData();
-  const now  = new Date();
   let acts;
   if (period==='week') {
-    const days = getWeekDates(thisMonday).map(dateKey);
+    const days = getWeekDates(getViewMonday()).map(dateKey);
     acts = data.activities.filter(a=>days.includes(a.date)&&a.done);
   } else {
-    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&a.done; });
+    const md = getViewMonthDate();
+    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===md.getMonth()&&d.getFullYear()===md.getFullYear()&&a.done; });
   }
   const prog = {};
   Object.keys(CATEGORIES).forEach(cat => {
@@ -565,13 +615,13 @@ function getCatProgress(period) {
 
 function getActProgress(period) {
   const data = getData();
-  const now  = new Date();
   let acts;
   if (period==='week') {
-    const days = getWeekDates(thisMonday).map(dateKey);
+    const days = getWeekDates(getViewMonday()).map(dateKey);
     acts = data.activities.filter(a=>days.includes(a.date)&&a.done);
   } else {
-    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&a.done; });
+    const md = getViewMonthDate();
+    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===md.getMonth()&&d.getFullYear()===md.getFullYear()&&a.done; });
   }
   const prog = {};
   Object.keys(ACTIVITIES).forEach(act => {
@@ -611,9 +661,16 @@ function renderWeek() {
         const pill = document.createElement('div');
         pill.className = 'activity-pill';
         const checkSvgSmall = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        // A past week is anything before thisMonday (not the current week)
+        const isPastWeek = new Date(key) < thisMonday;
+        const isMissed = !act.done && isPastWeek;
         if (act.done) {
           pill.style.background = a.hex;
           pill.style.color = '#000';
+        } else if (isMissed) {
+          pill.style.background = 'transparent';
+          pill.style.color = a.hex+'60';
+          pill.style.textDecoration = 'line-through';
         } else {
           pill.style.background = a.hex+'20';
           pill.style.color = a.hex;
@@ -705,7 +762,7 @@ function openAddModalForDay(day) {
   document.getElementById('doneToggleThumb').style.transform='';
   document.getElementById('doneToggleLabel').textContent='Gepland';
   document.getElementById('addDoneFields').style.display='none';
-  document.getElementById('addModalTitle').textContent='Activiteit toevoegen';
+  document.getElementById('addModalTitle').textContent='Toevoegen';
 
   const picker = document.getElementById('addActPicker');
   picker.innerHTML='';
@@ -740,7 +797,7 @@ function buildDaySelectGrid(preselect) {
   days.forEach(day=>{
     const key=dateKey(day), btn=document.createElement('div');
     btn.className='day-select-btn'+(selectedDays.includes(key)?' selected':'');
-    btn.innerHTML=`<div class="ds-name">${DAYS_NL[day.getDay()]}</div><div class="ds-date">${day.getDate()}</div>`;
+    btn.innerHTML=`<div class="ds-name">${DAYS_NL[day.getDay()]}</div>`;
     btn.onclick=()=>{
       if (addDoneMode) {
         // Single select only when done
@@ -793,11 +850,12 @@ function toggleDoneMode() {
 function buildDoneFields(actKey) {
   const a = actKey ? ACTIVITIES[actKey] : null;
   const isKm = a && a.unit==='km';
+  const kmLabel = (actKey==='run'||actKey==='walk') ? 'Gelopen km' : 'Gereden km';
   document.getElementById('addDoneGrid').innerHTML = isKm ? `
-    <div class="stat-field"><div class="stat-label">Gereden / gelopen km</div><input type="number" class="stat-input" id="doneKm" placeholder="0"></div>
-    <div class="stat-field"><div class="stat-label">Gem. snelheid (km/u)</div><input type="number" class="stat-input" id="doneSpeed" placeholder="0"></div>
-    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>` : `
-    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>`;
+    <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">${kmLabel}</div><input type="number" class="stat-input" id="doneKm" placeholder="0"></div>
+    <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">Gem. snelheid</div><input type="number" class="stat-input" id="doneSpeed" placeholder="km/u"></div>
+    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>` : `
+    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>`;
 }
 
 function saveActivity() {
@@ -854,38 +912,39 @@ function openDayDetail(day) {
       const editSvg=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
       const undoSvg=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
 
-      // Inline complete fields (hidden by default)
+      // Inline complete fields (hidden by default) — no wrapper card, flows inside the activity item
       const kmFields = isKm ? `
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">${(a.unit==='km' && (act.activity==='run'||act.activity==='walk'))?'Gelopen':'Gereden'} km</div><input type="number" class="stat-input" id="ckm-${act.id}" placeholder="0" value="${act.actualKm||''}"></div>
-          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">Gem. snelheid</div><input type="number" class="stat-input" id="cspd-${act.id}" placeholder="km/u" value="${act.avgSpeed||''}"></div>
+          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">${(a.unit==='km' && (act.activity==='run'||act.activity==='walk'))?'Gelopen':'Gereden'} km</div><input type="number" class="stat-input" id="ckm-${act.id}" placeholder="0"></div>
+          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">Gem. snelheid</div><input type="number" class="stat-input" id="cspd-${act.id}" placeholder="km/u"></div>
         </div>` : '';
       const completeFields = `
         <div id="cfields-${act.id}" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
           ${kmFields}
-          <div style="margin-bottom:8px"><div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div><input type="number" class="stat-input" id="ccal-${act.id}" placeholder="0" value="${act.calories||''}"></div>
+          <div style="margin-bottom:8px"><div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div><input type="number" class="stat-input" id="ccal-${act.id}" placeholder="0"></div>
           <div style="display:flex;gap:6px;margin-top:4px">
-            <button onclick="cancelComplete(${act.id})" class="btn-ghost" style="flex:1;padding:10px;font-size:11px">Annuleer</button>
             <button onclick="saveInlineComplete(${act.id})" class="btn-primary" style="flex:1;padding:10px;font-size:11px;background:var(--success)">${checkSvg} Opslaan</button>
+            <button onclick="cancelComplete(${act.id})" class="btn-ghost" style="flex:1;padding:10px;font-size:11px">Annuleer</button>
           </div>
         </div>`;
 
+      item.style.cursor = 'pointer';
       item.innerHTML=`
-        <div class="activity-item-info">
+        <div class="activity-item-info" style="flex:1">
           <div class="activity-item-name" style="color:${a.hex}"><span style="display:inline-flex">${a.icon.replace('width="20" height="20"','width="14" height="14"')}</span>${a.name}</div>
           ${meta?`<div class="activity-item-meta">${meta}</div>`:''}
         </div>
         ${!act.done ? `
-          <button onclick="openEditModal(${act.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">${editSvg}</button>
+          <button id="iconbtn-${act.id}" onclick="confirmDeleteActivity(${act.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></button>
           <div class="activity-actions" style="padding-top:0;border-top:none;margin-top:0">
             <div class="act-btn complete" id="cbtn-${act.id}" onclick="expandComplete(${act.id})">${checkSvg} Voltooien</div>
           </div>
           ${completeFields}` : `
-          <div class="activity-actions">
-            <div class="act-btn complete" onclick="undoDone(${act.id})">${undoSvg} Ongedaan</div>
-            <div class="act-btn edit" onclick="openEditModal(${act.id})">${editSvg} Bewerken</div>
-            <div class="act-btn del" onclick="deleteActivity(${act.id})"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Verwijder</div>
-          </div>`}`;
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);flex-shrink:0"><polyline points="9 18 15 12 9 6"/></svg>
+        `}`;
+      if (act.done) {
+        item.onclick = () => openEditModal(act.id);
+      }
       list.appendChild(item);
     });
   }
@@ -893,18 +952,39 @@ function openDayDetail(day) {
   document.getElementById('dayDetailModal').classList.add('open');
 }
 
+const trashSvg = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+const editSvgSmall = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+
 function expandComplete(id) {
-  // Hide any other open complete fields first
   document.querySelectorAll('[id^="cfields-"]').forEach(el=>{
-    if(el.id!==`cfields-${id}`) el.style.display='none';
+    if(el.id!==`cfields-${id}`) {
+      el.style.display='none';
+      // Reset other icons back to trash
+      const otherId = el.id.replace('cfields-','');
+      const otherBtn = document.getElementById(`iconbtn-${otherId}`);
+      if(otherBtn) { otherBtn.innerHTML=trashSvg; otherBtn.onclick=()=>confirmDeleteActivity(parseInt(otherId)); }
+    }
   });
   const fields = document.getElementById(`cfields-${id}`);
-  if (fields) fields.style.display = fields.style.display==='none' ? 'block' : 'none';
+  const iconBtn = document.getElementById(`iconbtn-${id}`);
+  const isExpanding = fields && fields.style.display==='none';
+  if(fields) fields.style.display = isExpanding ? 'block' : 'none';
+  if(iconBtn) {
+    if(isExpanding) {
+      iconBtn.innerHTML = editSvgSmall;
+      iconBtn.onclick = () => openEditModal(id);
+    } else {
+      iconBtn.innerHTML = trashSvg;
+      iconBtn.onclick = () => confirmDeleteActivity(id);
+    }
+  }
 }
 
 function cancelComplete(id) {
   const fields = document.getElementById(`cfields-${id}`);
   if(fields) fields.style.display='none';
+  const iconBtn = document.getElementById(`iconbtn-${id}`);
+  if(iconBtn) { iconBtn.innerHTML=trashSvg; iconBtn.onclick=()=>confirmDeleteActivity(id); }
 }
 
 function saveInlineComplete(id) {
@@ -939,46 +1019,135 @@ let editSelectedAct = null;
 
 function openEditModal(id) {
   const d=getData(), act=d.activities.find(a=>a.id===id); if(!act)return;
+  const a=ACTIVITIES[act.activity];
+  const isKm = a && a.unit==='km';
   editSelectedAct = act.activity;
   document.getElementById('editActivityId').value = id;
-  document.getElementById('editModalTitle').textContent = 'Wijzigen';
 
-  // Build activity picker — show all activities, highlight current
-  const picker = document.getElementById('editActPicker');
-  picker.innerHTML='';
-  Object.keys(ACTIVITIES).forEach(actKey=>{
-    const a=ACTIVITIES[actKey];
-    const btn=document.createElement('div');
-    btn.className='act-sub-btn';
-    btn.style.borderColor = actKey===act.activity ? a.hex : '';
-    btn.style.background  = actKey===act.activity ? a.hex+'15' : '';
-    btn.innerHTML=`<div class="act-sub-btn-icon" style="color:${a.hex}">${a.icon}</div><div class="act-sub-btn-name" style="color:${a.hex}">${a.name}</div>`;
-    btn.onclick=()=>{
-      picker.querySelectorAll('.act-sub-btn').forEach(b=>{b.style.borderColor='';b.style.background='';});
-      btn.style.borderColor=a.hex; btn.style.background=a.hex+'15';
-      editSelectedAct=actKey;
-    };
-    picker.appendChild(btn);
-  });
+  if (act.done) {
+    // Completed: clean modal matching voltooien style
+    document.getElementById('editModalTitle').textContent = 'Bewerken';
+    const picker = document.getElementById('editActPicker');
+    const kmLabel = (act.activity==='run'||act.activity==='walk') ? 'Gelopen' : 'Gereden';
+    picker.innerHTML =
+      `<div style="grid-column:1/-1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span style="color:${a.hex};display:inline-flex">${a.icon}</span>
+          <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:${a.hex}">${a.name}</span>
+        </div>`
+      + (isKm ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="stat-field">
+            <div class="stat-label" style="margin-bottom:3px">${kmLabel} km</div>
+            <input type="number" class="stat-input" id="editKm" placeholder="0" value="${act.actualKm||''}">
+          </div>
+          <div class="stat-field">
+            <div class="stat-label" style="margin-bottom:3px">Gem. snelheid</div>
+            <input type="number" class="stat-input" id="editSpeed" placeholder="km/u" value="${act.avgSpeed||''}">
+          </div>
+        </div>` : '')
+      + `<div class="stat-field" style="margin-bottom:8px">
+          <div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div>
+          <input type="number" class="stat-input" id="editCal" placeholder="0" value="${act.calories||''}">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <button onclick="saveEdit()" class="btn-primary" style="flex:1;padding:10px;font-size:11px">Opslaan</button>
+          <button onclick="confirmDelete()" style="flex:1;padding:10px;background:transparent;border:1px solid #3a1515;border-radius:8px;color:#ff5555;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer">Verwijder</button>
+        </div>
+      </div>`;
+  } else {
+    // For planned activities: show activity picker
+    document.getElementById('editModalTitle').textContent = 'Wijzigen';
+    const picker = document.getElementById('editActPicker');
+    picker.innerHTML='';
+    Object.keys(ACTIVITIES).forEach(actKey=>{
+      const av=ACTIVITIES[actKey];
+      const btn=document.createElement('div');
+      btn.className='act-sub-btn';
+      btn.style.borderColor = actKey===act.activity ? av.hex : '';
+      btn.style.background  = actKey===act.activity ? av.hex+'15' : '';
+      btn.innerHTML=`<div class="act-sub-btn-icon" style="color:${av.hex}">${av.icon}</div><div class="act-sub-btn-name" style="color:${av.hex}">${av.name}</div>`;
+      btn.onclick=()=>{
+        picker.querySelectorAll('.act-sub-btn').forEach(b=>{b.style.borderColor='';b.style.background='';});
+        btn.style.borderColor=av.hex; btn.style.background=av.hex+'15';
+        editSelectedAct=actKey;
+      };
+      picker.appendChild(btn);
+    });
+  }
 
   document.getElementById('editModal').classList.add('open');
+  // Done: show full-width opslaan + verwijder; hide annuleer (close by tapping outside)
+  // Planned: show annuleer + opslaan
+  const saveRow    = document.getElementById('editSaveRow');
+  const bottomActs = document.getElementById('editBottomActions');
+  const cancelBtn  = document.getElementById('editCancelBtn');
+  if (act.done) {
+    if (saveRow) saveRow.style.display = 'none';
+    if (bottomActs) bottomActs.style.display = 'none';
+  } else {
+    if (cancelBtn) cancelBtn.style.display = 'block';
+    if (saveRow) saveRow.style.display = 'flex';
+    if (bottomActs) bottomActs.style.display = 'none';
+  }
 }
 
 function saveEdit() {
   const id=parseInt(document.getElementById('editActivityId').value);
   const d=getData(), act=d.activities.find(a=>a.id===id);
-  if(act && editSelectedAct) {
-    const oldUnit = ACTIVITIES[act.activity]?.unit;
-    const newUnit = ACTIVITIES[editSelectedAct]?.unit;
-    act.activity = editSelectedAct;
-    // Clear km-specific data if switching from km to sessies or vice versa
-    if(oldUnit !== newUnit) {
-      act.actualKm = null; act.avgSpeed = null; act.km = null;
-      if(newUnit === 'km') act.calories = null;
+  if(act) {
+    if (act.done) {
+      // Save stat fields
+      const a=ACTIVITIES[act.activity], isKm=a&&a.unit==='km';
+      if(isKm){
+        act.actualKm = document.getElementById('editKm')?.value||null;
+        act.avgSpeed = document.getElementById('editSpeed')?.value||null;
+      }
+      act.calories = document.getElementById('editCal')?.value||null;
+    } else {
+      // Save activity change
+      const oldUnit = ACTIVITIES[act.activity]?.unit;
+      const newUnit = ACTIVITIES[editSelectedAct]?.unit;
+      act.activity = editSelectedAct;
+      if(oldUnit !== newUnit) {
+        act.actualKm=null; act.avgSpeed=null; act.km=null;
+      }
     }
     saveData(d);
   }
   closeEditModal(); openDayDetail(detailDay); renderAll();
+}
+
+function confirmDeleteActivity(id) {
+  const modal = document.getElementById('deleteConfirmModal');
+  document.getElementById('deleteConfirmId').value = id;
+  modal.classList.add('open');
+}
+
+function executeDelete() {
+  const id = parseInt(document.getElementById('deleteConfirmId').value);
+  document.getElementById('deleteConfirmModal').classList.remove('open');
+  deleteActivity(id);
+}
+
+function closeDeleteConfirm(e) {
+  if(!e||e.target===document.getElementById('deleteConfirmModal'))
+    document.getElementById('deleteConfirmModal').classList.remove('open');
+}
+
+function undoDoneFromEdit() {
+  const id = parseInt(document.getElementById('editActivityId').value);
+  const d = getData(), act = d.activities.find(a=>a.id===id);
+  if(act){ act.done=false; act.actualKm=null; act.avgSpeed=null; act.calories=null; saveData(d); }
+  closeEditModal();
+  openDayDetail(detailDay);
+  renderAll();
+}
+
+function toggleEditActPicker(id) {
+  const inner = document.getElementById('editActPickerInner');
+  if (!inner) return;
+  inner.style.display = inner.style.display === 'none' ? 'grid' : 'none';
 }
 
 function confirmDelete() {
@@ -1047,12 +1216,16 @@ function renderCatGoalCard(catKey, period, catProgress, actProgress, goalVal, co
 }
 
 function renderGoals() {
+  updateMonthNav();
   renderYearTotals();
   const data=getData();
   const wp=getCatProgress('week'), mp=getCatProgress('month');
   const wpa=getActProgress('week'),  mpa=getActProgress('month');
   const wc=document.getElementById('weekGoalsInline');
   const mc=document.getElementById('monthGoalsContainer');
+  const weekLabel = weekOffset===0 ? 'Weekdoelen' : weekOffset===-1 ? 'Vorige week' : weekOffset<0 ? `${Math.abs(weekOffset)} weken geleden` : weekOffset===1 ? 'Volgende week' : `Over ${weekOffset} weken`;
+  const sectionEl = wc ? wc.previousElementSibling : null;
+  if(sectionEl && sectionEl.classList.contains('section-title')) sectionEl.textContent = weekLabel;
   if(wc){wc.innerHTML=''; Object.keys(CATEGORIES).forEach(c=>renderCatGoalCard(c,'week',wp,wpa,data.goals.week[c]||0,wc));}
   if(mc){mc.innerHTML=''; Object.keys(CATEGORIES).forEach(c=>renderCatGoalCard(c,'month',mp,mpa,data.goals.month[c]||0,mc));}
 }
