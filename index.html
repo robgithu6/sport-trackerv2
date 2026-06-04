@@ -1,0 +1,1522 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Sport Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+:root {
+  --bg:#000; --surface:#111; --surface2:#1a1a1a; --surface3:#222;
+  --border:#2a2a2a; --border2:#333;
+  --text:#fff; --text-dim:#888; --text-muted:#444;
+  --cat-cycling:#00d4a8; --cat-fitness:#ff6b35; --cat-running:#60a5fa;
+  --act-gravel:#a3e635; --act-mtb:#a78bfa; --act-fitness:#ff6b35; --act-stretch:#fbbf24; --act-run:#60a5fa; --act-walk:#34d399;
+  --accent:#00d4a8; --success:#00d4a8; --tab-h:64px;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
+
+/* HEADER */
+.header{padding:52px 20px 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.header-top{display:flex;justify-content:space-between;align-items:center}
+.header-label{font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:1px}
+.header-title{font-size:22px;font-weight:800;letter-spacing:-0.5px}
+.header-date{font-size:11px;font-weight:500;color:var(--text-dim);letter-spacing:0.5px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--tab-h) + var(--safe-bottom) + 8px)}
+
+/* TABS */
+.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:calc(var(--tab-h) + var(--safe-bottom));background:#0a0a0a;border-top:1px solid var(--border);display:flex;align-items:flex-start;padding-top:8px;padding-bottom:var(--safe-bottom);z-index:100}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;-webkit-user-select:none}
+.tab-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;opacity:.35;transition:opacity .2s}
+.tab-label{font-size:9px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1.5px;transition:color .2s}
+.tab.active .tab-icon{opacity:1}
+.tab.active .tab-label{color:var(--accent)}
+
+/* PAGE */
+.page{display:none;padding:16px}
+.page.active{display:block}
+.section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:20px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.section-title:first-child{margin-top:0}
+
+/* WEEK NAV */
+.week-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;gap:8px}
+.week-nav-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.week-nav-btn:active{background:var(--surface3)}
+.week-nav-btn:disabled{opacity:.2;pointer-events:none}
+.week-nav-center{flex:1;text-align:center}
+.week-nav-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:2px}
+.week-nav-range{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.week-nav-today-btn{font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent);background:transparent;border-radius:20px;padding:2px 8px;cursor:pointer;margin-top:4px;display:inline-block;letter-spacing:1px;text-transform:uppercase}
+
+/* CATEGORY QUICK-ADD */
+.cat-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
+.cat-btn{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 6px 9px;cursor:pointer;text-align:center;position:relative;overflow:hidden;transition:background .15s}
+.cat-btn:active{background:var(--surface2)}
+.cat-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.cat-btn[data-cat="cycling"]::after{background:var(--cat-cycling)}
+.cat-btn[data-cat="fitness"]::after{background:var(--cat-fitness)}
+.cat-btn[data-cat="running"]::after{background:var(--cat-running)}
+.cat-btn-icon{height:22px;display:flex;align-items:center;justify-content:center;margin-bottom:3px}
+.cat-btn-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-dim)}
+
+/* ACTIVITY SUB-BUTTONS */
+.act-sub-buttons{display:grid;gap:5px;margin-bottom:10px}
+.act-sub-buttons.cols-2{grid-template-columns:1fr 1fr}
+.act-sub-btn{background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .15s}
+.act-sub-btn:active{background:var(--surface3)}
+.act-sub-btn-icon{width:20px;height:20px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.act-sub-btn-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* WEEK DAYS */
+.week-days{display:flex;flex-direction:column;gap:1px}
+.day-row{background:var(--surface);overflow:hidden;border-bottom:1px solid var(--border)}
+.day-row:first-child{border-radius:10px 10px 0 0}
+.day-row:last-child{border-radius:0 0 10px 10px;border-bottom:none}
+.day-row.today{background:#081410}
+.day-header{display:flex;align-items:center;padding:11px 14px;cursor:pointer;gap:12px}
+.day-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;width:28px;flex-shrink:0;color:var(--text-dim)}
+.day-row.today .day-name{color:var(--accent)}
+.day-activities{display:flex;flex-wrap:wrap;gap:5px;flex:1}
+.day-add-btn{color:var(--text-muted);flex-shrink:0;padding:0 2px;display:flex;align-items:center}
+.activity-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#111;border-radius:16px 16px 0 0;padding:16px 20px calc(20px + var(--safe-bottom));width:100%;max-width:480px;border-top:1px solid var(--border2)}
+.modal-handle{width:32px;height:3px;background:var(--border2);border-radius:2px;margin:0 auto 18px}
+.modal-title{font-size:14px;font-weight:800;letter-spacing:1.5px;margin-bottom:16px;text-transform:uppercase}
+.modal-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:500;width:100%;margin-bottom:10px}
+.modal-input:focus{outline:none;border-color:var(--accent)}
+.modal-input::placeholder{color:var(--text-muted)}
+.modal-row{display:flex;gap:8px;margin-bottom:10px}
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:opacity .15s}
+.btn-primary:active{opacity:.85}
+.btn-ghost{flex:1;padding:14px;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer}
+
+/* Day select */
+.day-select-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px}
+.day-select-btn{padding:7px 4px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;text-align:center}
+.day-select-btn.selected{border-color:var(--accent);background:#00d4a818}
+.day-select-btn .ds-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.day-select-btn.selected .ds-name{color:var(--accent)}
+.day-select-btn .ds-date{font-size:9px;color:var(--text-muted);margin-top:1px}
+
+/* Activity list */
+.activity-list{display:flex;flex-direction:column;gap:6px}
+.activity-item{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;flex-wrap:wrap}
+.activity-item-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px}
+.activity-item-check.done{border-color:var(--success);background:var(--success);color:#000;font-weight:900}
+.activity-item-info{flex:1}
+.activity-item-name{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:6px}
+.activity-item-meta{font-size:11px;font-weight:500;color:var(--text-dim);margin-top:2px}
+.activity-actions{width:100%;display:flex;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.act-btn{flex:1;padding:7px 4px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text-muted);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;text-align:center}
+.act-btn:active{opacity:.7}
+.act-btn.complete{border-color:var(--success);color:var(--success)}
+.act-btn.edit{border-color:#444;color:#aaa}
+.act-btn.del{border-color:#3a1515;color:#ff5555}
+
+/* Stat fields */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-field{display:flex;flex-direction:column;gap:4px}
+.stat-label{font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px}
+.stat-input{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'Inter',sans-serif;font-size:18px;font-weight:700;width:100%;text-align:center}
+.stat-input:focus{outline:none;border-color:var(--accent)}
+.stat-input::placeholder{color:var(--text-muted);font-size:13px;font-weight:400}
+
+/* CATEGORY GOAL CARDS */
+.goal-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:6px}
+.goal-card-header{display:flex;align-items:center;gap:10px;cursor:pointer}
+.goal-ring-wrap{flex-shrink:0}
+.goal-ring{position:relative;width:40px;height:40px}
+.goal-ring svg{transform:rotate(-90deg)}
+.goal-ring-bg{fill:none;stroke:var(--border2);stroke-width:4}
+.goal-ring-fill{fill:none;stroke-width:4;stroke-linecap:round;transition:stroke-dashoffset .5s ease}
+.goal-ring-pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:800;line-height:1}
+.goal-ring-sub{font-size:6px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.goal-card-info{flex:1;min-width:0}
+.goal-card-name{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text-dim);margin-bottom:2px}
+.goal-card-val{font-size:16px;font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:4px}
+.goal-card-val span{font-size:11px;font-weight:500;color:var(--text-dim);margin-left:2px}
+.goal-bar-bg{height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.goal-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+.goal-gear{background:none;border:none;color:var(--text-muted);font-size:14px;cursor:pointer;padding:0;line-height:1;flex-shrink:0}
+.goal-gear:active{color:var(--text)}
+
+/* Category breakdown */
+.goal-breakdown{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;display:flex;flex-direction:column;gap:5px;overflow:hidden;max-height:0;border-top-width:0;margin-top:0;padding-top:0;transition:max-height .3s ease,padding-top .3s ease,margin-top .3s ease,border-top-width .3s ease}
+.goal-breakdown.open{max-height:200px;border-top-width:1px;margin-top:8px;padding-top:8px}
+.breakdown-row{display:flex;align-items:center;gap:8px}
+.breakdown-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.breakdown-name{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);width:70px;flex-shrink:0}
+.breakdown-val{font-size:12px;font-weight:700;flex-shrink:0;width:44px}
+.breakdown-bar-bg{flex:1;height:2px;background:var(--border);border-radius:2px;overflow:hidden}
+.breakdown-bar-fill{height:100%;border-radius:2px}
+
+/* HISTORY */
+.history-charts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.history-chart-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 10px 8px;overflow:hidden}
+.history-chart-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px}
+.history-chart-card canvas{display:block;max-width:100%}
+.history-week{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:8px}
+.history-week-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.history-week-label{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px}
+.history-week-dates{font-size:10px;font-weight:500;color:var(--text-dim)}
+.history-sports{display:flex;flex-direction:column;gap:8px}
+.history-sport-row{display:flex;align-items:center;gap:10px}
+.history-sport-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.history-sport-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);width:60px;flex-shrink:0}
+.history-sport-val{font-size:13px;font-weight:800;flex-shrink:0;width:52px}
+.history-bar-bg{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.history-bar-fill{height:100%;border-radius:2px}
+
+.year-detail-row{display:flex;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.year-detail-row:last-child{border-bottom:none}
+.year-detail-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:10px}
+.year-detail-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;flex:1}
+.year-detail-stats{display:flex;gap:0;flex-shrink:0}
+.year-detail-stat{text-align:right;width:80px}
+.year-detail-stat-val{font-size:16px;font-weight:800;line-height:1}
+.year-detail-stat-label{font-size:9px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:1px}
+
+.year-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.year-stat-block{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 10px 8px;display:flex;flex-direction:column;gap:2px;cursor:pointer;transition:background .15s}
+.year-stat-block:active{background:var(--surface3)}
+.year-stat-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-dim)}
+.year-stat-val{font-size:20px;font-weight:800;letter-spacing:-0.5px;line-height:1}
+.year-stat-unit{font-size:10px;font-weight:500;color:var(--text-dim)}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;line-height:1.8}
+.done-toggle-on{background:var(--success) !important}
+.done-toggle-on > div{transform:translateX(20px)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-label" id="headerLabel">Jouw training</div>
+        <div class="header-title">Sport Tracker</div>
+      </div>
+      <button onclick="openSettings()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- WEEK PAGE -->
+    <div class="page active" id="page-week">
+      <div class="section-title">Weekdoelen</div>
+      <div id="weekGoalsInline"></div>
+
+      <div class="section-title">Activiteit toevoegen</div>
+      <div class="cat-buttons" id="catButtons"></div>
+
+      <div class="week-nav">
+        <button class="week-nav-btn" id="prevWeekBtn" onclick="shiftWeek(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="week-nav-center">
+          <div class="week-nav-label" id="weekNavLabel"></div>
+          <div class="week-nav-range" id="weekNavRange"></div>
+          <div id="weekNavTodayWrap"></div>
+        </div>
+        <button class="week-nav-btn" id="nextWeekBtn" onclick="shiftWeek(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+      <div class="week-days" id="weekDays"></div>
+    </div>
+
+    <!-- GOALS PAGE -->
+    <div class="page" id="page-goals">
+      <div id="yearTotalsContainer"></div>
+      <div class="section-title">Maanddoelen</div>
+      <div id="monthGoalsContainer"></div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="page-history">
+      <div id="historyContainer"></div>
+      <div id="historyPager" style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:8px"></div>
+    </div>
+
+
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('week')">
+      <div class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg></div>
+      <div class="tab-label">Week</div>
+    </div>
+    <div class="tab" onclick="switchTab('goals')">
+      <div class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></div>
+      <div class="tab-label">Doelen</div>
+    </div>
+    <div class="tab" onclick="switchTab('history')">
+      <div class="tab-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20V10l4-4 4 4 4-6v16"/></svg></div>
+      <div class="tab-label">Historie</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal" onclick="closeAddModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="addModalTitle">Activiteit toevoegen</div>
+
+    <!-- Activity picker -->
+    <div id="addActPicker" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px"></div>
+
+    <!-- Day select -->
+    <div class="day-select-grid" id="daySelectGrid"></div>
+
+    <!-- Done toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:10px">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim)" id="doneToggleLabel">Gepland</span>
+      <div id="doneToggle" onclick="toggleDoneMode()" style="width:44px;height:24px;border-radius:12px;background:var(--border2);position:relative;cursor:pointer;transition:background .2s">
+        <div id="doneToggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s"></div>
+      </div>
+    </div>
+
+    <!-- Completion fields (hidden by default) -->
+    <div id="addDoneFields" style="display:none">
+      <div class="stat-grid" id="addDoneGrid"></div>
+    </div>
+
+    <div class="modal-row">
+      <button class="btn-ghost" onclick="closeAddModal()">Annuleer</button>
+      <button class="btn-primary" style="flex:2" onclick="saveActivity()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY DETAIL MODAL -->
+<div class="modal-overlay" id="dayDetailModal" onclick="closeDayModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="dayDetailTitle"></div>
+    <div class="activity-list" id="dayDetailList"></div>
+  </div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal" onclick="closeEditModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="editModalTitle">Wijzigen</div>
+    <input type="hidden" id="editActivityId">
+
+    <!-- Activity picker -->
+    <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">Activiteit</div>
+    <div id="editActPicker" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px"></div>
+
+    <div class="modal-row">
+      <button class="btn-ghost" onclick="closeEditModal()" style="flex:1">Annuleer</button>
+      <button class="btn-primary" onclick="saveEdit()" style="flex:1">Opslaan</button>
+    </div>
+    <div style="margin-top:8px">
+      <button onclick="confirmDelete()" style="width:100%;padding:12px;background:transparent;border:1px solid #3a1515;border-radius:8px;color:#ff5555;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;cursor:pointer">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        Verwijderen
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- GOAL EDIT MODAL (week/month per cat) -->
+<div class="modal-overlay" id="goalEditModal" onclick="closeGoalEdit(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="goalEditTitle">Doel instellen</div>
+    <input type="hidden" id="goalEditPeriod">
+    <input type="hidden" id="goalEditCat">
+    <div class="stat-grid" style="grid-template-columns:1fr">
+      <div class="stat-field">
+        <div class="stat-label" id="goalEditLabel">Doel</div>
+        <input type="number" class="stat-input" id="goalEditValue" placeholder="0">
+      </div>
+    </div>
+    <div class="modal-row">
+      <button class="btn-ghost" onclick="closeGoalEdit()">Annuleer</button>
+      <button class="btn-primary" style="flex:2" onclick="saveGoalEdit()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- YEAR DETAIL MODAL -->
+<div class="modal-overlay" id="yearDetailModal" onclick="closeYearDetail(event)" style="align-items:center;padding:20px">
+  <div class="modal" style="border-radius:16px;max-height:80dvh;overflow-y:auto">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="yearDetailTitle"></div>
+    <div id="yearDetailContent"></div>
+    <div class="modal-row" style="margin-top:14px">
+      <button class="btn-primary" onclick="closeYearDetail()">Sluiten</button>
+    </div>
+  </div>
+</div>
+
+<!-- YEAR GOAL MODAL -->
+<div class="modal-overlay" id="yearGoalModal" onclick="closeYearGoalModal(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Jaardoelen instellen</div>
+    <div class="stat-grid">
+      <div class="stat-field"><div class="stat-label" style="color:var(--cat-cycling)">Fietsen (km)</div><input type="number" class="stat-input" id="yg_cycling" placeholder="0"></div>
+      <div class="stat-field"><div class="stat-label" style="color:var(--cat-running)">Lopen (km)</div><input type="number" class="stat-input" id="yg_running" placeholder="0"></div>
+      <div class="stat-field"><div class="stat-label" style="color:var(--cat-fitness)">Fitness (sess.)</div><input type="number" class="stat-input" id="yg_fitness" placeholder="0"></div>
+    </div>
+    <div class="modal-row">
+      <button class="btn-ghost" onclick="closeYearGoalModal()">Annuleer</button>
+      <button class="btn-primary" style="flex:2" onclick="saveYearGoals()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settingsOverlay" style="position:fixed;inset:0 auto;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);z-index:300;display:none;flex-direction:column">
+  <div style="padding:52px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:1px">Menu</div>
+      <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">Instellingen</div>
+    </div>
+    <button onclick="closeSettings()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px">
+
+    <div class="section-title" style="margin-top:0">Profiel</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:6px">
+      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:8px">Naam</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="text" id="settingsName" placeholder="Jouw naam..." class="modal-input" style="margin-bottom:0;flex:1">
+        <button onclick="saveName()" class="btn-primary" style="width:auto;padding:12px 16px;flex-shrink:0">Opslaan</button>
+      </div>
+    </div>
+
+    <div class="section-title">Data</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Exporteren</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">Download al je activiteiten en doelen als back-up bestand.</div>
+        <button onclick="exportData()" class="btn-primary" style="background:var(--accent)">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporteren
+        </button>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Importeren</div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:12px">Laad een eerder geëxporteerd back-up bestand in. <strong style="color:#ff5555">Let op: dit overschrijft je huidige data.</strong></div>
+        <label style="display:block">
+          <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+          <span onclick="document.getElementById('importFile').click()" class="btn-primary" style="display:block;text-align:center;background:var(--surface2);color:var(--text-dim);border:1px solid var(--border);cursor:pointer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Bestand kiezen
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="section-title">App info</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Versie</span>
+          <span style="font-size:13px;font-weight:700">1.0</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Activiteiten opgeslagen</span>
+          <span style="font-size:13px;font-weight:700" id="infoActivityCount">—</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Opslagruimte gebruikt</span>
+          <span style="font-size:13px;font-weight:700" id="infoStorage">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── DATA MODEL ───────────────────────────────────────────────────────────────
+const CATEGORIES = {
+  cycling: {
+    name: 'Fietsen', color: 'var(--cat-cycling)', hex: '#00d4a8', unit: 'km',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 21 9 6 16 21"/><polyline points="11 21 16 10 21 21"/><polyline points="7 13 9 6 11 13"/></svg>`,
+    activities: ['gravel','mtb']
+  },
+  running: {
+    name: 'Lopen', color: 'var(--cat-running)', hex: '#60a5fa', unit: 'km',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 L10 4 L14 4 L21 21 Z"/><line x1="12" y1="7" x2="12" y2="10" stroke-dasharray="1.5 2"/><line x1="12" y1="12" x2="12" y2="15" stroke-dasharray="1.5 2"/><line x1="12" y1="17" x2="12" y2="20" stroke-dasharray="1.5 2"/></svg>`,
+    activities: ['run','walk']
+  },
+  fitness: {
+    name: 'Fitness', color: 'var(--cat-fitness)', hex: '#ff6b35', unit: 'sessies',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="10" width="3" height="4" rx="1"/><rect x="20" y="10" width="3" height="4" rx="1"/><rect x="4" y="8" width="3" height="8" rx="1"/><rect x="17" y="8" width="3" height="8" rx="1"/><line x1="7" y1="12" x2="17" y2="12"/></svg>`,
+    activities: ['fitness','stretch']
+  }
+};
+
+const ACTIVITIES = {
+  gravel:  { name: 'Gravel',   cat: 'cycling', unit: 'km',      hex: '#a3e635',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 L10 4 L14 4 L21 21 Z"/><line x1="12" y1="7" x2="12" y2="10" stroke-dasharray="1.5 2"/><line x1="12" y1="12" x2="12" y2="15" stroke-dasharray="1.5 2"/><line x1="12" y1="17" x2="12" y2="20" stroke-dasharray="1.5 2"/></svg>` },
+  mtb:     { name: 'MTB',      cat: 'cycling', unit: 'km',      hex: '#a78bfa',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 21 9 6 16 21"/><polyline points="11 21 16 10 21 21"/><polyline points="7 13 9 6 11 13"/></svg>` },
+  fitness: { name: 'Fitness',  cat: 'fitness', unit: 'sessies', hex: '#ff6b35',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="10" width="3" height="4" rx="1"/><rect x="20" y="10" width="3" height="4" rx="1"/><rect x="4" y="8" width="3" height="8" rx="1"/><rect x="17" y="8" width="3" height="8" rx="1"/><line x1="7" y1="12" x2="17" y2="12"/></svg>` },
+  stretch: { name: 'Stretch',  cat: 'fitness', unit: 'sessies', hex: '#fbbf24',
+    icon: `<svg width="20" height="20" viewBox="0 0 120 90" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M60 72 C54 55 54 35 60 18 C66 35 66 55 60 72Z"/><path d="M60 72 C44 60 30 42 34 24 C46 34 56 52 60 72Z"/><path d="M60 72 C76 60 90 42 86 24 C74 34 64 52 60 72Z"/><path d="M60 72 C36 66 12 54 10 36 C28 40 48 56 60 72Z"/><path d="M60 72 C84 66 108 54 110 36 C92 40 72 56 60 72Z"/></svg>` },
+  run:     { name: 'Hardlopen',cat: 'running', unit: 'km',      hex: '#60a5fa',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 L10 4 L14 4 L21 21 Z"/><line x1="12" y1="7" x2="12" y2="10" stroke-dasharray="1.5 2"/><line x1="12" y1="12" x2="12" y2="15" stroke-dasharray="1.5 2"/><line x1="12" y1="17" x2="12" y2="20" stroke-dasharray="1.5 2"/></svg>` },
+  walk:    { name: 'Wandelen', cat: 'running', unit: 'km',      hex: '#34d399',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.5"/><path d="M9 9l3-2 3 2M10 9l-2 5h8l-2-5M8 14l-2 6M16 14l2 6M10 14l1 6M14 14l-1 6"/></svg>` }
+};
+
+const DAYS_NL   = ['Zo','Ma','Di','Wo','Do','Vr','Za'];
+const DAYS_FULL = ['Zondag','Maandag','Dinsdag','Woensdag','Donderdag','Vrijdag','Zaterdag'];
+const MONTHS_NL = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+
+let currentTab   = 'week';
+let weekOffset   = 0;
+let detailDay    = null;
+let selectedDay  = null;
+let selectedAct  = null;
+let activeCat    = null;
+
+// ── STORAGE ──────────────────────────────────────────────────────────────────
+function getData() {
+  const def = {
+    activities: [],
+    goals: {
+      week:  { cycling:80, fitness:3, running:20 },
+      month: { cycling:300, fitness:12, running:80 },
+      year:  { cycling:2000, fitness:100, running:500 }
+    }
+  };
+  const d = JSON.parse(localStorage.getItem('sportTracker2') || 'null');
+  if (!d) return def;
+  if (!d.goals.year) d.goals.year = def.goals.year;
+  return d;
+}
+function saveData(d) { localStorage.setItem('sportTracker2', JSON.stringify(d)); }
+
+// ── DATES ────────────────────────────────────────────────────────────────────
+function getMonday(d) {
+  const date = new Date(d), day = date.getDay();
+  date.setDate(date.getDate() + (day===0?-6:1-day));
+  date.setHours(0,0,0,0); return date;
+}
+function dateKey(d) { return d.toISOString().split('T')[0]; }
+function getWeekDates(mon) {
+  return Array.from({length:7},(_,i)=>{ const d=new Date(mon); d.setDate(mon.getDate()+i); return d; });
+}
+
+const today      = new Date(); today.setHours(0,0,0,0);
+const thisMonday = getMonday(today);
+
+function getViewMonday() {
+  const d = new Date(thisMonday); d.setDate(thisMonday.getDate()+weekOffset*7); return d;
+}
+
+// ── WEEK NAV ─────────────────────────────────────────────────────────────────
+function updateWeekNav() {
+  const mon = getViewMonday();
+  const sun = new Date(mon); sun.setDate(mon.getDate()+6);
+  const label = weekOffset===0?'Deze week':weekOffset===1?'Volgende week':weekOffset===-1?'Vorige week':weekOffset<0?`${Math.abs(weekOffset)} weken geleden`:`Over ${weekOffset} weken`;
+  document.getElementById('weekNavLabel').textContent = label;
+  document.getElementById('weekNavRange').textContent = `${mon.getDate()} ${MONTHS_NL[mon.getMonth()]} – ${sun.getDate()} ${MONTHS_NL[sun.getMonth()]}`;
+  document.getElementById('weekNavTodayWrap').innerHTML = weekOffset!==0?`<div class="week-nav-today-btn" onclick="goToToday()">Naar vandaag</div>`:'';
+  document.getElementById('prevWeekBtn').disabled = weekOffset<=-8;
+  document.getElementById('nextWeekBtn').disabled = weekOffset>=4;
+}
+function shiftWeek(d) { weekOffset+=d; updateWeekNav(); renderWeek(); }
+function goToToday()  { weekOffset=0;  updateWeekNav(); renderWeek(); }
+
+// ── PROGRESS HELPERS ─────────────────────────────────────────────────────────
+function getCatProgress(period) {
+  const data = getData();
+  const now  = new Date();
+  let acts;
+  if (period==='week') {
+    const days = getWeekDates(thisMonday).map(dateKey);
+    acts = data.activities.filter(a=>days.includes(a.date)&&a.done);
+  } else {
+    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&a.done; });
+  }
+  const prog = {};
+  Object.keys(CATEGORIES).forEach(cat => {
+    const catActs = CATEGORIES[cat].activities;
+    const matched = acts.filter(a=>catActs.includes(a.activity));
+    prog[cat] = CATEGORIES[cat].unit==='km'
+      ? matched.reduce((s,a)=>s+(parseFloat(a.actualKm||a.km)||0),0)
+      : matched.length;
+  });
+  return prog;
+}
+
+function getActProgress(period) {
+  const data = getData();
+  const now  = new Date();
+  let acts;
+  if (period==='week') {
+    const days = getWeekDates(thisMonday).map(dateKey);
+    acts = data.activities.filter(a=>days.includes(a.date)&&a.done);
+  } else {
+    acts = data.activities.filter(a=>{ const d=new Date(a.date); return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()&&a.done; });
+  }
+  const prog = {};
+  Object.keys(ACTIVITIES).forEach(act => {
+    const matched = acts.filter(a=>a.activity===act);
+    prog[act] = ACTIVITIES[act].unit==='km'
+      ? matched.reduce((s,a)=>s+(parseFloat(a.actualKm||a.km)||0),0)
+      : matched.length;
+  });
+  return prog;
+}
+
+// ── RENDER WEEK ──────────────────────────────────────────────────────────────
+function renderWeek() {
+  const data = getData();
+  const container = document.getElementById('weekDays');
+  container.innerHTML = '';
+  getWeekDates(getViewMonday()).forEach(day => {
+    const key     = dateKey(day);
+    const isToday = key===dateKey(today);
+    const acts    = data.activities.filter(a=>a.date===key);
+    const row     = document.createElement('div');
+    row.className = 'day-row'+(isToday?' today':'');
+    const header  = document.createElement('div');
+    header.className = 'day-header';
+    header.onclick = ()=>openDayDetail(day);
+    const dayName = document.createElement('div');
+    dayName.className = 'day-name';
+    dayName.textContent = DAYS_NL[day.getDay()];
+    if (isToday) dayName.style.color='var(--accent)';
+    const pillsDiv = document.createElement('div');
+    pillsDiv.className = 'day-activities';
+    if (!acts.length) {
+      pillsDiv.innerHTML=`<span style="font-family:'Inter',sans-serif;font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:1px">vrij</span>`;
+    } else {
+      acts.forEach(act => {
+        const a = ACTIVITIES[act.activity]; if(!a) return;
+        const pill = document.createElement('div');
+        pill.className = 'activity-pill';
+        const checkSvgSmall = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+        if (act.done) {
+          pill.style.background = a.hex;
+          pill.style.color = '#000';
+        } else {
+          pill.style.background = a.hex+'20';
+          pill.style.color = a.hex;
+          pill.style.opacity = '0.6';
+        }
+        const kmDisplay = act.done
+          ? (act.actualKm?act.actualKm+'km':(act.km?act.km+'km':null))
+          : (act.km?act.km+'km':null);
+        const suffix = act.done ? ` ${checkSvgSmall}` : '';
+        pill.innerHTML = `<span style="display:inline-flex;align-items:center">${a.icon.replace('width="20" height="20"','width="12" height="12"')}</span> ${kmDisplay||a.name}${suffix}`;
+        pillsDiv.appendChild(pill);
+      });
+    }
+    const addBtn = document.createElement('div');
+    addBtn.className = 'day-add-btn';
+    addBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    addBtn.onclick = e=>{ e.stopPropagation(); openAddModalForDay(day); };
+    header.appendChild(dayName); header.appendChild(pillsDiv); header.appendChild(addBtn);
+    row.appendChild(header); container.appendChild(row);
+  });
+}
+
+// ── QUICK-ADD UI ─────────────────────────────────────────────────────────────
+let addDoneMode = false;
+
+function buildCatButtons() {
+  const c = document.getElementById('catButtons');
+  c.innerHTML='';
+  Object.keys(CATEGORIES).forEach(catKey => {
+    const cat = CATEGORIES[catKey];
+    const btn = document.createElement('div');
+    btn.className='cat-btn'; btn.setAttribute('data-cat',catKey);
+    btn.innerHTML=`<div class="cat-btn-icon" style="color:${cat.color}">${cat.icon}</div><div class="cat-btn-name">${cat.name}</div>`;
+    btn.onclick=()=>openAddModal(catKey);
+    c.appendChild(btn);
+  });
+}
+
+function openAddModal(catKey, preselectedDay) {
+  activeCat = catKey;
+  selectedAct = null;
+  addDoneMode = false;
+
+  // Reset toggle
+  const toggle = document.getElementById('doneToggle');
+  toggle.classList.remove('done-toggle-on');
+  document.getElementById('doneToggleThumb').style.transform='';
+  document.getElementById('doneToggleLabel').textContent='Gepland';
+  document.getElementById('addDoneFields').style.display='none';
+
+  // Title
+  document.getElementById('addModalTitle').textContent = CATEGORIES[catKey].name;
+
+  // Build activity picker for this category
+  const picker = document.getElementById('addActPicker');
+  picker.innerHTML='';
+  CATEGORIES[catKey].activities.forEach(actKey => {
+    const act = ACTIVITIES[actKey];
+    const btn = document.createElement('div');
+    btn.className='act-sub-btn'; btn.id='apick_'+actKey;
+    btn.innerHTML=`<div class="act-sub-btn-icon" style="color:${act.hex}">${act.icon}</div><div class="act-sub-btn-name" style="color:${act.hex}">${act.name}</div>`;
+    btn.onclick=()=>{
+      picker.querySelectorAll('.act-sub-btn').forEach(b=>b.style.borderColor='');
+      btn.style.borderColor=act.hex; btn.style.background=act.hex+'15';
+      selectedAct=actKey;
+      // Rebuild done fields in case unit changed
+      if(addDoneMode) buildDoneFields(actKey);
+    };
+    picker.appendChild(btn);
+  });
+
+  // Day grid — default today or first day of viewed week
+  const viewDays = getWeekDates(getViewMonday()).map(dateKey);
+  const def = preselectedDay || (viewDays.includes(dateKey(today)) ? dateKey(today) : viewDays[0]);
+  buildDaySelectGrid(def);
+
+  document.getElementById('addModal').classList.add('open');
+}
+
+function openAddModalForDay(day) {
+  // Open with all categories visible — pick first cat as default, let user switch
+  // Show a full picker with all activities grouped
+  activeCat = null;
+  selectedAct = null;
+  addDoneMode = false;
+
+  const toggle = document.getElementById('doneToggle');
+  toggle.classList.remove('done-toggle-on');
+  document.getElementById('doneToggleThumb').style.transform='';
+  document.getElementById('doneToggleLabel').textContent='Gepland';
+  document.getElementById('addDoneFields').style.display='none';
+  document.getElementById('addModalTitle').textContent='Activiteit toevoegen';
+
+  const picker = document.getElementById('addActPicker');
+  picker.innerHTML='';
+  picker.style.gridTemplateColumns='1fr 1fr';
+  Object.keys(CATEGORIES).forEach(catKey=>{
+    CATEGORIES[catKey].activities.forEach(actKey=>{
+      const act=ACTIVITIES[actKey];
+      const btn=document.createElement('div');
+      btn.className='act-sub-btn'; btn.id='apick_'+actKey;
+      btn.innerHTML=`<div class="act-sub-btn-icon" style="color:${act.hex}">${act.icon}</div><div class="act-sub-btn-name" style="color:${act.hex}">${act.name}</div>`;
+      btn.onclick=()=>{
+        picker.querySelectorAll('.act-sub-btn').forEach(b=>{b.style.borderColor='';b.style.background='';});
+        btn.style.borderColor=act.hex; btn.style.background=act.hex+'15';
+        selectedAct=actKey;
+        if(addDoneMode) buildDoneFields(actKey);
+      };
+      picker.appendChild(btn);
+    });
+  });
+
+  buildDaySelectGrid(dateKey(day));
+  document.getElementById('addModal').classList.add('open');
+}
+
+let selectedDays = []; // multi-select array
+
+function buildDaySelectGrid(preselect) {
+  const days=getWeekDates(getViewMonday()), grid=document.getElementById('daySelectGrid');
+  grid.innerHTML='';
+  selectedDay=preselect;
+  selectedDays = preselect ? [preselect] : [];
+  days.forEach(day=>{
+    const key=dateKey(day), btn=document.createElement('div');
+    btn.className='day-select-btn'+(selectedDays.includes(key)?' selected':'');
+    btn.innerHTML=`<div class="ds-name">${DAYS_NL[day.getDay()]}</div><div class="ds-date">${day.getDate()}</div>`;
+    btn.onclick=()=>{
+      if (addDoneMode) {
+        // Single select only when done
+        selectedDays=[key]; selectedDay=key;
+        grid.querySelectorAll('.day-select-btn').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+      } else {
+        // Multi-select when planning
+        if (selectedDays.includes(key)) {
+          selectedDays = selectedDays.filter(d=>d!==key);
+          btn.classList.remove('selected');
+        } else {
+          selectedDays.push(key);
+          btn.classList.add('selected');
+        }
+        selectedDay = selectedDays[0]||null;
+      }
+    };
+    grid.appendChild(btn);
+  });
+}
+
+function toggleDoneMode() {
+  addDoneMode = !addDoneMode;
+  const toggle = document.getElementById('doneToggle');
+  const thumb  = document.getElementById('doneToggleThumb');
+  const label  = document.getElementById('doneToggleLabel');
+  const fields = document.getElementById('addDoneFields');
+  if (addDoneMode) {
+    toggle.classList.add('done-toggle-on');
+    label.textContent='Voltooid';
+    fields.style.display='block';
+    buildDoneFields(selectedAct);
+    // Reduce to single selection when switching to done
+    const grid = document.getElementById('daySelectGrid');
+    if (selectedDays.length > 1) {
+      const keep = selectedDays[0];
+      selectedDays = [keep]; selectedDay = keep;
+      grid.querySelectorAll('.day-select-btn').forEach((b,i)=>{
+        b.classList.toggle('selected', dateKey(getWeekDates(getViewMonday())[i])===keep);
+      });
+    }
+  } else {
+    toggle.classList.remove('done-toggle-on');
+    label.textContent='Gepland';
+    fields.style.display='none';
+  }
+}
+
+function buildDoneFields(actKey) {
+  const a = actKey ? ACTIVITIES[actKey] : null;
+  const isKm = a && a.unit==='km';
+  document.getElementById('addDoneGrid').innerHTML = isKm ? `
+    <div class="stat-field"><div class="stat-label">Gereden / gelopen km</div><input type="number" class="stat-input" id="doneKm" placeholder="0"></div>
+    <div class="stat-field"><div class="stat-label">Gem. snelheid (km/u)</div><input type="number" class="stat-input" id="doneSpeed" placeholder="0"></div>
+    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>` : `
+    <div class="stat-field" style="grid-column:1/-1"><div class="stat-label">Calorieën (kcal)</div><input type="number" class="stat-input" id="doneCal" placeholder="0"></div>`;
+}
+
+function saveActivity() {
+  if (!selectedAct) { alert('Kies een activiteit!'); return; }
+  const days = addDoneMode ? (selectedDay?[selectedDay]:[]) : selectedDays;
+  if (!days.length) { alert('Kies een dag!'); return; }
+  const data=getData();
+  const a = ACTIVITIES[selectedAct];
+  const isKm = a && a.unit==='km';
+  days.forEach(day=>{
+    const entry = { id:Date.now()*1000+Math.floor(Math.random()*1000), date:day, activity:selectedAct, done:addDoneMode };
+    if (addDoneMode) {
+      if(isKm) {
+        entry.actualKm = document.getElementById('doneKm')?.value||null;
+        entry.avgSpeed = document.getElementById('doneSpeed')?.value||null;
+      }
+      entry.calories = document.getElementById('doneCal')?.value||null;
+    }
+    data.activities.push(entry);
+  });
+  saveData(data);
+  closeAddModal();
+  document.querySelectorAll('.cat-btn').forEach(b=>b.style.borderColor='');
+  activeCat=null;
+  selectedDays=[];
+  renderAll();
+}
+
+function closeAddModal(e) {
+  if (!e||e.target===document.getElementById('addModal')) {
+    document.getElementById('addModal').classList.remove('open');
+    selectedAct=null; addDoneMode=false; selectedDays=[];
+  }
+}
+
+// ── DAY DETAIL ───────────────────────────────────────────────────────────────
+function openDayDetail(day) {
+  const data=getData(), key=dateKey(day);
+  const allActs=data.activities.filter(a=>a.date===key);
+  document.getElementById('dayDetailTitle').textContent=`${DAYS_FULL[day.getDay()]} ${day.getDate()} ${MONTHS_NL[day.getMonth()]}`;
+  const list=document.getElementById('dayDetailList');
+  list.innerHTML='';
+  if (!allActs.length) {
+    list.innerHTML='<div class="empty-state">Geen activiteiten gepland.</div>';
+  } else {
+    allActs.forEach(act=>{
+      const a=ACTIVITIES[act.activity]; if(!a) return;
+      const isKm=a.unit==='km';
+      const item=document.createElement('div'); item.className='activity-item'; item.id=`act-item-${act.id}`;
+      const meta=act.done
+        ?[act.actualKm?`${act.actualKm} km`:null,act.avgSpeed?`${act.avgSpeed} km/u`:null,act.calories?`${act.calories} kcal`:null].filter(Boolean).join(' · ')
+        :'';
+      const checkSvg=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+      const editSvg=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
+      const undoSvg=`<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>`;
+
+      // Inline complete fields (hidden by default)
+      const kmFields = isKm ? `
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">${(a.unit==='km' && (act.activity==='run'||act.activity==='walk'))?'Gelopen':'Gereden'} km</div><input type="number" class="stat-input" id="ckm-${act.id}" placeholder="0" value="${act.actualKm||''}"></div>
+          <div class="stat-field"><div class="stat-label" style="margin-bottom:3px">Gem. snelheid</div><input type="number" class="stat-input" id="cspd-${act.id}" placeholder="km/u" value="${act.avgSpeed||''}"></div>
+        </div>` : '';
+      const completeFields = `
+        <div id="cfields-${act.id}" style="display:none;width:100%;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+          ${kmFields}
+          <div style="margin-bottom:8px"><div class="stat-label" style="margin-bottom:3px">Calorieën (kcal)</div><input type="number" class="stat-input" id="ccal-${act.id}" placeholder="0" value="${act.calories||''}"></div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <button onclick="cancelComplete(${act.id})" class="btn-ghost" style="flex:1;padding:10px;font-size:11px">Annuleer</button>
+            <button onclick="saveInlineComplete(${act.id})" class="btn-primary" style="flex:1;padding:10px;font-size:11px;background:var(--success)">${checkSvg} Opslaan</button>
+          </div>
+        </div>`;
+
+      item.innerHTML=`
+        <div class="activity-item-info">
+          <div class="activity-item-name" style="color:${a.hex}"><span style="display:inline-flex">${a.icon.replace('width="20" height="20"','width="14" height="14"')}</span>${a.name}</div>
+          ${meta?`<div class="activity-item-meta">${meta}</div>`:''}
+        </div>
+        ${!act.done ? `
+          <button onclick="openEditModal(${act.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:4px;display:flex;align-items:center;flex-shrink:0">${editSvg}</button>
+          <div class="activity-actions" style="padding-top:0;border-top:none;margin-top:0">
+            <div class="act-btn complete" id="cbtn-${act.id}" onclick="expandComplete(${act.id})">${checkSvg} Voltooien</div>
+          </div>
+          ${completeFields}` : `
+          <div class="activity-actions">
+            <div class="act-btn complete" onclick="undoDone(${act.id})">${undoSvg} Ongedaan</div>
+            <div class="act-btn edit" onclick="openEditModal(${act.id})">${editSvg} Bewerken</div>
+            <div class="act-btn del" onclick="deleteActivity(${act.id})"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg> Verwijder</div>
+          </div>`}`;
+      list.appendChild(item);
+    });
+  }
+  detailDay=day;
+  document.getElementById('dayDetailModal').classList.add('open');
+}
+
+function expandComplete(id) {
+  // Hide any other open complete fields first
+  document.querySelectorAll('[id^="cfields-"]').forEach(el=>{
+    if(el.id!==`cfields-${id}`) el.style.display='none';
+  });
+  const fields = document.getElementById(`cfields-${id}`);
+  if (fields) fields.style.display = fields.style.display==='none' ? 'block' : 'none';
+}
+
+function cancelComplete(id) {
+  const fields = document.getElementById(`cfields-${id}`);
+  if(fields) fields.style.display='none';
+}
+
+function saveInlineComplete(id) {
+  const d=getData(), act=d.activities.find(a=>a.id===id); if(!act)return;
+  const a=ACTIVITIES[act.activity], isKm=a&&a.unit==='km';
+  act.done=true;
+  if(isKm){
+    act.actualKm=document.getElementById(`ckm-${id}`)?.value||null;
+    act.avgSpeed=document.getElementById(`cspd-${id}`)?.value||null;
+  }
+  act.calories=document.getElementById(`ccal-${id}`)?.value||null;
+  saveData(d);
+  openDayDetail(detailDay); renderAll();
+}
+
+function undoDone(id) {
+  const d=getData(),act=d.activities.find(a=>a.id===id);
+  if(act){act.done=false;act.actualKm=null;act.avgSpeed=null;act.calories=null;saveData(d);}
+  openDayDetail(detailDay); renderAll();
+}
+function deleteActivity(id) {
+  const d=getData(); d.activities=d.activities.filter(a=>a.id!==id); saveData(d);
+  openDayDetail(detailDay); renderAll();
+}
+function closeDayModal(e) {
+  if(!e||e.target===document.getElementById('dayDetailModal'))
+    document.getElementById('dayDetailModal').classList.remove('open');
+}
+
+// ── EDIT ─────────────────────────────────────────────────────────────────────
+let editSelectedAct = null;
+
+function openEditModal(id) {
+  const d=getData(), act=d.activities.find(a=>a.id===id); if(!act)return;
+  editSelectedAct = act.activity;
+  document.getElementById('editActivityId').value = id;
+  document.getElementById('editModalTitle').textContent = 'Wijzigen';
+
+  // Build activity picker — show all activities, highlight current
+  const picker = document.getElementById('editActPicker');
+  picker.innerHTML='';
+  Object.keys(ACTIVITIES).forEach(actKey=>{
+    const a=ACTIVITIES[actKey];
+    const btn=document.createElement('div');
+    btn.className='act-sub-btn';
+    btn.style.borderColor = actKey===act.activity ? a.hex : '';
+    btn.style.background  = actKey===act.activity ? a.hex+'15' : '';
+    btn.innerHTML=`<div class="act-sub-btn-icon" style="color:${a.hex}">${a.icon}</div><div class="act-sub-btn-name" style="color:${a.hex}">${a.name}</div>`;
+    btn.onclick=()=>{
+      picker.querySelectorAll('.act-sub-btn').forEach(b=>{b.style.borderColor='';b.style.background='';});
+      btn.style.borderColor=a.hex; btn.style.background=a.hex+'15';
+      editSelectedAct=actKey;
+    };
+    picker.appendChild(btn);
+  });
+
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEdit() {
+  const id=parseInt(document.getElementById('editActivityId').value);
+  const d=getData(), act=d.activities.find(a=>a.id===id);
+  if(act && editSelectedAct) {
+    const oldUnit = ACTIVITIES[act.activity]?.unit;
+    const newUnit = ACTIVITIES[editSelectedAct]?.unit;
+    act.activity = editSelectedAct;
+    // Clear km-specific data if switching from km to sessies or vice versa
+    if(oldUnit !== newUnit) {
+      act.actualKm = null; act.avgSpeed = null; act.km = null;
+      if(newUnit === 'km') act.calories = null;
+    }
+    saveData(d);
+  }
+  closeEditModal(); openDayDetail(detailDay); renderAll();
+}
+
+function confirmDelete() {
+  const id=parseInt(document.getElementById('editActivityId').value);
+  closeEditModal();
+  const d=getData(); d.activities=d.activities.filter(a=>a.id!==id); saveData(d);
+  openDayDetail(detailDay); renderAll();
+}
+
+function closeEditModal(e) {
+  if(!e||e.target===document.getElementById('editModal'))
+    document.getElementById('editModal').classList.remove('open');
+}
+
+
+
+// ── GOALS ────────────────────────────────────────────────────────────────────
+const GEAR_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
+
+function renderCatGoalCard(catKey, period, catProgress, actProgress, goalVal, container) {
+  const cat = CATEGORIES[catKey];
+  const current = catProgress[catKey]||0;
+  const pct = goalVal>0?Math.min(100,Math.round((current/goalVal)*100)):0;
+  const r=16, circ=+(2*Math.PI*r).toFixed(2), offset=+(circ-(pct/100)*circ).toFixed(2);
+
+  const card=document.createElement('div'); card.className='goal-card';
+
+  const breakdownHtml = cat.activities.map(actKey=>{
+    const a=ACTIVITIES[actKey];
+    const v=actProgress[actKey]||0;
+    const aPct=goalVal>0?Math.min(100,Math.round((v/goalVal)*100)):0;
+    return `<div class="breakdown-row">
+      <div class="breakdown-dot" style="background:${a.hex}"></div>
+      <div class="breakdown-name">${a.name}</div>
+      <div class="breakdown-val" style="color:${a.hex}">${v}${a.unit==='km'?' km':'x'}</div>
+      <div class="breakdown-bar-bg"><div class="breakdown-bar-fill" style="width:${aPct}%;background:${a.hex}"></div></div>
+    </div>`;
+  }).join('');
+
+  card.innerHTML=`
+    <div class="goal-card-header">
+      <div class="goal-ring-wrap">
+        <div class="goal-ring">
+          <svg width="40" height="40" viewBox="0 0 40 40">
+            <circle class="goal-ring-bg" cx="20" cy="20" r="${r}"/>
+            <circle class="goal-ring-fill" cx="20" cy="20" r="${r}" stroke="${cat.hex}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+          </svg>
+          <div class="goal-ring-pct" style="color:${cat.hex}">${pct}<div class="goal-ring-sub">%</div></div>
+        </div>
+      </div>
+      <div class="goal-card-info">
+        <div class="goal-card-name">${cat.icon.replace('width="20" height="20"','width="12" height="12"')} ${cat.name} · ${period==='week'?'Week':'Maand'}</div>
+        <div class="goal-card-val">${current}<span>${cat.unit==='km'?' km':'x'} / ${goalVal}${cat.unit==='km'?' km':'x'}</span></div>
+        <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${pct}%;background:${cat.hex}"></div></div>
+      </div>
+      <button class="goal-gear" onclick="event.stopPropagation();openGoalEdit('${period}','${catKey}',${goalVal})">${GEAR_SVG}</button>
+    </div>
+    <div class="goal-breakdown">${breakdownHtml}</div>`;
+
+  // Toggle breakdown on card click
+  card.querySelector('.goal-card-header').addEventListener('click', ()=>{
+    card.querySelector('.goal-breakdown').classList.toggle('open');
+  });
+
+  container.appendChild(card);
+}
+
+function renderGoals() {
+  renderYearTotals();
+  const data=getData();
+  const wp=getCatProgress('week'), mp=getCatProgress('month');
+  const wpa=getActProgress('week'),  mpa=getActProgress('month');
+  const wc=document.getElementById('weekGoalsInline');
+  const mc=document.getElementById('monthGoalsContainer');
+  if(wc){wc.innerHTML=''; Object.keys(CATEGORIES).forEach(c=>renderCatGoalCard(c,'week',wp,wpa,data.goals.week[c]||0,wc));}
+  if(mc){mc.innerHTML=''; Object.keys(CATEGORIES).forEach(c=>renderCatGoalCard(c,'month',mp,mpa,data.goals.month[c]||0,mc));}
+}
+
+function openGoalEdit(period,cat,current) {
+  const c=CATEGORIES[cat];
+  document.getElementById('goalEditPeriod').value=period;
+  document.getElementById('goalEditCat').value=cat;
+  document.getElementById('goalEditValue').value=current;
+  document.getElementById('goalEditTitle').innerHTML=`<span style="display:inline-flex;align-items:center;gap:8px;color:${c.hex}">${c.icon.replace('width="20" height="20"','width="16" height="16"')}</span>${c.name} — ${period==='week'?'Week':'Maand'}doel`;
+  document.getElementById('goalEditLabel').textContent=`Doel (${c.unit})`;
+  document.getElementById('goalEditModal').classList.add('open');
+  setTimeout(()=>document.getElementById('goalEditValue').focus(),100);
+}
+function saveGoalEdit() {
+  const period=document.getElementById('goalEditPeriod').value;
+  const cat=document.getElementById('goalEditCat').value;
+  const val=parseFloat(document.getElementById('goalEditValue').value)||0;
+  const d=getData(); d.goals[period][cat]=val; saveData(d);
+  closeGoalEdit(); renderGoals();
+}
+function closeGoalEdit(e) {
+  if(!e||e.target===document.getElementById('goalEditModal'))
+    document.getElementById('goalEditModal').classList.remove('open');
+}
+
+// ── YEAR TOTALS ───────────────────────────────────────────────────────────────
+function renderYearTotals() {
+  const container=document.getElementById('yearTotalsContainer'); if(!container)return;
+  const data=getData(), now=new Date(), year=now.getFullYear();
+  const done=data.activities.filter(a=>{const d=new Date(a.date);return d.getFullYear()===year&&a.done;});
+
+  // Per-activity totals
+  const actVals={};
+  Object.keys(ACTIVITIES).forEach(k=>{
+    const acts=done.filter(a=>a.activity===k);
+    actVals[k]=ACTIVITIES[k].unit==='km'
+      ? acts.reduce((s,a)=>s+(parseFloat(a.actualKm||a.km)||0),0)
+      : acts.length;
+  });
+
+  // Category totals
+  const cyclingKm = actVals.gravel + actVals.mtb;
+  const runKm     = actVals.run + actVals.walk;
+  const fitSess   = actVals.fitness + actVals.stretch;
+  const totalKcal = done.reduce((s,a)=>s+(parseFloat(a.calories)||0),0);
+
+  const card=document.createElement('div'); card.className='history-week';
+  card.innerHTML=`
+    <div class="history-week-header">
+      <div class="history-week-label">${year}</div>
+      <button class="goal-gear" onclick="openYearGoalEdit()">${GEAR_SVG}</button>
+    </div>
+    <div class="year-stats-grid">
+      <div class="year-stat-block" onclick="openYearDetail('cycling')">
+        <div class="year-stat-label" style="color:var(--cat-cycling)">Fietsen</div>
+        <div class="year-stat-val" style="color:var(--cat-cycling)">${cyclingKm}</div>
+        <div class="year-stat-unit">km</div>
+      </div>
+      <div class="year-stat-block" onclick="openYearDetail('gravel')">
+        <div class="year-stat-label" style="color:var(--act-gravel)">Gravel</div>
+        <div class="year-stat-val" style="color:var(--act-gravel)">${actVals.gravel}</div>
+        <div class="year-stat-unit">km</div>
+      </div>
+      <div class="year-stat-block" onclick="openYearDetail('mtb')">
+        <div class="year-stat-label" style="color:var(--act-mtb)">MTB</div>
+        <div class="year-stat-val" style="color:var(--act-mtb)">${actVals.mtb}</div>
+        <div class="year-stat-unit">km</div>
+      </div>
+    </div>
+    <div class="year-stats-grid" style="margin-top:6px">
+      <div class="year-stat-block" onclick="openYearDetail('running')">
+        <div class="year-stat-label" style="color:var(--cat-running)">Lopen</div>
+        <div class="year-stat-val" style="color:var(--cat-running)">${runKm}</div>
+        <div class="year-stat-unit">km</div>
+      </div>
+      <div class="year-stat-block" onclick="openYearDetail('fitness')">
+        <div class="year-stat-label" style="color:var(--cat-fitness)">Fitness</div>
+        <div class="year-stat-val" style="color:var(--cat-fitness)">${fitSess}</div>
+        <div class="year-stat-unit">sessies</div>
+      </div>
+      <div class="year-stat-block" onclick="openYearDetail('calories')">
+        <div class="year-stat-label">Calorieën</div>
+        <div class="year-stat-val">${totalKcal.toLocaleString('nl-NL')}</div>
+        <div class="year-stat-unit">kcal</div>
+      </div>
+    </div>`;
+  container.innerHTML=''; container.appendChild(card);
+}
+
+function openYearDetail(type) {
+  const data = getData(), now = new Date(), year = now.getFullYear();
+  const done = data.activities.filter(a=>{const d=new Date(a.date);return d.getFullYear()===year&&a.done;});
+
+  // Determine which activities to show
+  const config = {
+    cycling:  { title:'Fietsen',    acts:['gravel','mtb'] },
+    gravel:   { title:'Gravel',     acts:['gravel'] },
+    mtb:      { title:'MTB',        acts:['mtb'] },
+    running:  { title:'Lopen',      acts:['run','walk'] },
+    fitness:  { title:'Fitness',    acts:['fitness','stretch'] },
+    calories: { title:'Calorieën',  acts:['gravel','mtb','run','walk','fitness','stretch'] },
+  };
+  const cfg = config[type];
+  document.getElementById('yearDetailTitle').textContent = cfg.title + ' — ' + year;
+
+  const content = document.getElementById('yearDetailContent');
+  content.innerHTML = '';
+
+  cfg.acts.forEach(actKey => {
+    const a = ACTIVITIES[actKey];
+    const acts = done.filter(x=>x.activity===actKey);
+    const km    = a.unit==='km' ? acts.reduce((s,x)=>s+(parseFloat(x.actualKm||x.km)||0),0) : null;
+    const sess  = a.unit!=='km' ? acts.length : null;
+    const kcal  = acts.reduce((s,x)=>s+(parseFloat(x.calories)||0),0);
+
+    const row = document.createElement('div');
+    row.className = 'year-detail-row';
+    row.innerHTML = `
+      <div class="year-detail-icon" style="color:${a.hex}">${a.icon.replace('width="20" height="20"','width="20" height="20"')}</div>
+      <div class="year-detail-name" style="color:${a.hex}">${a.name}</div>
+      <div class="year-detail-stats">
+        ${km!==null ? `<div class="year-detail-stat"><div class="year-detail-stat-val" style="color:${a.hex}">${km}</div><div class="year-detail-stat-label">km</div></div>` : ''}
+        ${sess!==null ? `<div class="year-detail-stat"><div class="year-detail-stat-val" style="color:${a.hex}">${sess}</div><div class="year-detail-stat-label">sessies</div></div>` : ''}
+        <div class="year-detail-stat"><div class="year-detail-stat-val">${kcal.toLocaleString('nl-NL')}</div><div class="year-detail-stat-label">kcal</div></div>
+      </div>`;
+    content.appendChild(row);
+  });
+
+  document.getElementById('yearDetailModal').classList.add('open');
+}
+
+function closeYearDetail(e) {
+  if(!e||e.target===document.getElementById('yearDetailModal'))
+    document.getElementById('yearDetailModal').classList.remove('open');
+}
+
+function openYearGoalEdit() {
+  const d=getData();
+  ['cycling','running','fitness'].forEach(k=>{const el=document.getElementById('yg_'+k);if(el)el.value=d.goals.year[k]||0;});
+  document.getElementById('yearGoalModal').classList.add('open');
+}
+function saveYearGoals() {
+  const d=getData();
+  ['cycling','running','fitness'].forEach(k=>{const el=document.getElementById('yg_'+k);if(el)d.goals.year[k]=parseFloat(el.value)||0;});
+  saveData(d); document.getElementById('yearGoalModal').classList.remove('open'); renderGoals();
+}
+function closeYearGoalModal(e) {
+  if(!e||e.target===document.getElementById('yearGoalModal'))
+    document.getElementById('yearGoalModal').classList.remove('open');
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────────────────
+function renderCharts() {
+  const data=getData(); const WEEKS=8;
+  const labels=[], kmCycling=[], kmRunning=[], sessFit=[], sessStr=[];
+  for(let w=WEEKS-1;w>=0;w--){
+    const mon=new Date(thisMonday); mon.setDate(thisMonday.getDate()-w*7);
+    const days=getWeekDates(mon).map(dateKey);
+    const acts=data.activities.filter(a=>days.includes(a.date)&&a.done);
+    labels.push(w===0?'Nu':`-${w}`);
+    kmCycling.push(['gravel','mtb'].reduce((s,k)=>s+acts.filter(a=>a.activity===k).reduce((ss,a)=>ss+(parseFloat(a.actualKm||a.km)||0),0),0));
+    kmRunning.push(['run','walk'].reduce((s,k)=>s+acts.filter(a=>a.activity===k).reduce((ss,a)=>ss+(parseFloat(a.actualKm||a.km)||0),0),0));
+    sessFit.push(acts.filter(a=>a.activity==='fitness').length);
+    sessStr.push(acts.filter(a=>a.activity==='stretch').length);
+  }
+  drawLineChart('chartKm',labels,[{values:kmCycling,color:'#00d4a8'},{values:kmCycling.map((_,i)=>kmRunning[i]),color:'#60a5fa'}]);
+  drawLineChart('chartSessions',labels,[{values:sessFit,color:'#ff6b35'},{values:sessStr,color:'#fbbf24'}]);
+}
+
+function drawLineChart(canvasId,labels,series){
+  const canvas=document.getElementById(canvasId); if(!canvas)return;
+  const card=canvas.closest('.history-chart-card');
+  const W=card?card.clientWidth-20:140, H=90;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=W*dpr; canvas.height=H*dpr;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr);
+  const PAD={top:6,right:6,bottom:18,left:28};
+  const gW=W-PAD.left-PAD.right, gH=H-PAD.top-PAD.bottom, n=labels.length;
+  const maxVal=Math.max(...series.flatMap(s=>s.values),1);
+  ctx.strokeStyle='#2a2a2a'; ctx.lineWidth=1;
+  [0,.5,1].forEach(t=>{const y=PAD.top+gH*(1-t);ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(PAD.left+gW,y);ctx.stroke();});
+  ctx.fillStyle='#555'; ctx.font='500 8px Inter,sans-serif'; ctx.textAlign='right';
+  [0,Math.round(maxVal/2),maxVal].forEach((v,i)=>{ctx.fillText(v,PAD.left-4,PAD.top+gH*(1-i*0.5)+3);});
+  ctx.textAlign='center';
+  labels.forEach((lbl,i)=>{const x=PAD.left+(i/(n-1))*gW;ctx.fillStyle=lbl==='Nu'?'#888':'#444';ctx.fillText(lbl,x,H-3);});
+  series.forEach(({values,color})=>{
+    const pts=values.map((v,i)=>({x:PAD.left+(i/(n-1))*gW,y:PAD.top+gH*(1-v/maxVal)}));
+    ctx.beginPath(); ctx.moveTo(pts[0].x,PAD.top+gH);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.lineTo(pts[pts.length-1].x,PAD.top+gH); ctx.closePath();
+    ctx.fillStyle=color+'18'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    pts.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.strokeStyle=color; ctx.lineWidth=2; ctx.lineJoin='round'; ctx.stroke();
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,2.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();});
+  });
+}
+
+let historyPage = 0;
+const HISTORY_PAGE_SIZE = 10;
+
+function renderHistory() {
+  const container = document.getElementById('historyContainer');
+  const pager     = document.getElementById('historyPager');
+  container.innerHTML = '';
+  pager.innerHTML = '';
+
+  const data = getData();
+
+  // Collect all weeks with at least one completed activity, going back up to 104 weeks
+  const weeksWithData = [];
+  for (let w = 0; w < 104; w++) {
+    const monday = new Date(thisMonday);
+    monday.setDate(thisMonday.getDate() - w * 7);
+    const days = getWeekDates(monday).map(dateKey);
+    const acts = data.activities.filter(a => days.includes(a.date) && a.done);
+    if (acts.length > 0 || w === 0) {
+      weeksWithData.push({ w, monday, days, acts });
+    }
+  }
+
+  const totalPages = Math.max(1, Math.ceil(weeksWithData.length / HISTORY_PAGE_SIZE));
+  historyPage = Math.min(historyPage, totalPages - 1);
+
+  const pageWeeks = weeksWithData.slice(
+    historyPage * HISTORY_PAGE_SIZE,
+    (historyPage + 1) * HISTORY_PAGE_SIZE
+  );
+
+  if (pageWeeks.length === 0) {
+    container.innerHTML = '<div class="empty-state">Nog geen activiteiten gelogd.</div>';
+    return;
+  }
+
+  pageWeeks.forEach(({ w, monday, acts }) => {
+    const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+
+    const actVals = {};
+    Object.keys(ACTIVITIES).forEach(k => {
+      const matched = acts.filter(a => a.activity === k);
+      actVals[k] = ACTIVITIES[k].unit === 'km'
+        ? matched.reduce((s, a) => s + (parseFloat(a.actualKm || a.km) || 0), 0)
+        : matched.length;
+    });
+    const cyclingKm = actVals.gravel + actVals.mtb;
+    const runKm     = actVals.run + actVals.walk;
+    const fitSess   = actVals.fitness + actVals.stretch;
+    const totalKcal = acts.reduce((s, a) => s + (parseFloat(a.calories) || 0), 0);
+
+    const label = w === 0 ? 'Deze week' : w === 1 ? 'Vorige week' : `${w} weken geleden`;
+    const dateRange = `${monday.getDate()} ${MONTHS_NL[monday.getMonth()]} – ${sunday.getDate()} ${MONTHS_NL[sunday.getMonth()]}`;
+    const ts = monday.getTime();
+
+    const weekEl = document.createElement('div');
+    weekEl.className = 'history-week';
+    weekEl.innerHTML = `
+      <div class="history-week-header">
+        <div class="history-week-label">${label}</div>
+        <div class="history-week-dates">${dateRange}</div>
+      </div>
+      <div class="year-stats-grid">
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'cycling')">
+          <div class="year-stat-label" style="color:var(--cat-cycling)">Fietsen</div>
+          <div class="year-stat-val" style="color:var(--cat-cycling)">${cyclingKm}</div>
+          <div class="year-stat-unit">km</div>
+        </div>
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'running')">
+          <div class="year-stat-label" style="color:var(--cat-running)">Lopen</div>
+          <div class="year-stat-val" style="color:var(--cat-running)">${runKm}</div>
+          <div class="year-stat-unit">km</div>
+        </div>
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'fitness')">
+          <div class="year-stat-label" style="color:var(--cat-fitness)">Fitness</div>
+          <div class="year-stat-val" style="color:var(--cat-fitness)">${fitSess}</div>
+          <div class="year-stat-unit">sessies</div>
+        </div>
+      </div>
+      <div class="year-stats-grid" style="margin-top:6px">
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'gravel')">
+          <div class="year-stat-label" style="color:var(--act-gravel)">Gravel</div>
+          <div class="year-stat-val" style="color:var(--act-gravel)">${actVals.gravel}</div>
+          <div class="year-stat-unit">km</div>
+        </div>
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'mtb')">
+          <div class="year-stat-label" style="color:var(--act-mtb)">MTB</div>
+          <div class="year-stat-val" style="color:var(--act-mtb)">${actVals.mtb}</div>
+          <div class="year-stat-unit">km</div>
+        </div>
+        <div class="year-stat-block" onclick="openHistoryDetail(${ts},'calories')">
+          <div class="year-stat-label">Calorieën</div>
+          <div class="year-stat-val">${totalKcal.toLocaleString('nl-NL')}</div>
+          <div class="year-stat-unit">kcal</div>
+        </div>
+      </div>`;
+    container.appendChild(weekEl);
+  });
+
+  // Pagination controls
+  if (totalPages > 1) {
+    const chevL = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+    const chevR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+    const prevBtn = document.createElement('button');
+    prevBtn.className = 'week-nav-btn';
+    prevBtn.innerHTML = chevL;
+    prevBtn.disabled = historyPage === 0;
+    prevBtn.onclick = () => { historyPage--; renderHistory(); document.getElementById('page-history').scrollTop = 0; };
+
+    const pageLabel = document.createElement('div');
+    pageLabel.style.cssText = 'font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px';
+    pageLabel.textContent = `${historyPage + 1} / ${totalPages}`;
+
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'week-nav-btn';
+    nextBtn.innerHTML = chevR;
+    nextBtn.disabled = historyPage >= totalPages - 1;
+    nextBtn.onclick = () => { historyPage++; renderHistory(); document.getElementById('page-history').scrollTop = 0; };
+
+    pager.appendChild(prevBtn);
+    pager.appendChild(pageLabel);
+    pager.appendChild(nextBtn);
+  }
+}
+
+function openHistoryDetail(mondayTs, type) {
+  const monday = new Date(mondayTs);
+  const days = getWeekDates(monday).map(dateKey);
+  const data = getData();
+  const acts = data.activities.filter(a=>days.includes(a.date)&&a.done);
+
+  const config = {
+    cycling:  { title:'Fietsen',   acts:['gravel','mtb'] },
+    gravel:   { title:'Gravel',    acts:['gravel'] },
+    mtb:      { title:'MTB',       acts:['mtb'] },
+    running:  { title:'Lopen',     acts:['run','walk'] },
+    fitness:  { title:'Fitness',   acts:['fitness','stretch'] },
+    calories: { title:'Calorieën', acts:['gravel','mtb','run','walk','fitness','stretch'] },
+  };
+  const cfg = config[type];
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  document.getElementById('yearDetailTitle').textContent =
+    `${cfg.title} · ${monday.getDate()} ${MONTHS_NL[monday.getMonth()]} – ${sunday.getDate()} ${MONTHS_NL[sunday.getMonth()]}`;
+
+  const content = document.getElementById('yearDetailContent');
+  content.innerHTML = '';
+
+  cfg.acts.forEach(actKey => {
+    const a = ACTIVITIES[actKey];
+    const matched = acts.filter(x=>x.activity===actKey);
+    const km   = a.unit==='km' ? matched.reduce((s,x)=>s+(parseFloat(x.actualKm||x.km)||0),0) : null;
+    const sess = a.unit!=='km' ? matched.length : null;
+    const kcal = matched.reduce((s,x)=>s+(parseFloat(x.calories)||0),0);
+
+    const row = document.createElement('div');
+    row.className='year-detail-row';
+    row.innerHTML=`
+      <div class="year-detail-icon" style="color:${a.hex}">${a.icon}</div>
+      <div class="year-detail-name" style="color:${a.hex}">${a.name}</div>
+      <div class="year-detail-stats">
+        ${km!==null?`<div class="year-detail-stat"><div class="year-detail-stat-val" style="color:${a.hex}">${km}</div><div class="year-detail-stat-label">km</div></div>`:''}
+        ${sess!==null?`<div class="year-detail-stat"><div class="year-detail-stat-val" style="color:${a.hex}">${sess}</div><div class="year-detail-stat-label">sessies</div></div>`:''}
+        <div class="year-detail-stat"><div class="year-detail-stat-val">${kcal.toLocaleString('nl-NL')}</div><div class="year-detail-stat-label">kcal</div></div>
+      </div>`;
+    content.appendChild(row);
+  });
+
+  document.getElementById('yearDetailModal').classList.add('open');
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  if(tab === 'history' && currentTab !== 'history') historyPage = 0;
+  currentTab=tab;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  document.querySelectorAll('.tab')[['week','goals','history'].indexOf(tab)].classList.add('active');
+  if(tab==='goals') renderGoals();
+  if(tab==='history') renderHistory();
+}
+
+function openSettings() {
+  renderSettings();
+  document.getElementById('settingsOverlay').style.display='flex';
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').style.display='none';
+}
+
+function renderSettings() {
+  const d = getData();
+  const nameEl = document.getElementById('settingsName');
+  if(nameEl) nameEl.value = d.name || '';
+  updateHeaderName(d.name);
+  const actCount = d.activities ? d.activities.length : 0;
+  const storageStr = localStorage.getItem('sportTracker2') || '';
+  const kb = (new Blob([storageStr]).size / 1024).toFixed(1);
+  const countEl = document.getElementById('infoActivityCount');
+  const storEl  = document.getElementById('infoStorage');
+  if(countEl) countEl.textContent = actCount;
+  if(storEl)  storEl.textContent  = kb + ' KB';
+}
+
+function saveName() {
+  const name = document.getElementById('settingsName').value.trim();
+  const d = getData(); d.name = name; saveData(d);
+  updateHeaderName(name);
+}
+
+function updateHeaderName(name) {
+  const label = document.getElementById('headerLabel');
+  if(label) label.textContent = name ? name : 'Jouw training';
+}
+
+function exportData() {
+  const d = getData();
+  const json = JSON.stringify(d, null, 2);
+  const blob = new Blob([json], {type:'application/json'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const now  = new Date();
+  a.href = url;
+  a.download = `sport-tracker-backup-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const parsed = JSON.parse(ev.target.result);
+      if(!parsed.activities) throw new Error('Ongeldig bestand');
+      if(confirm(`Import ${parsed.activities.length} activiteiten? Je huidige data wordt overschreven.`)) {
+        localStorage.setItem('sportTracker2', JSON.stringify(parsed));
+        renderAll();
+        renderSettings();
+        alert('Import geslaagd!');
+      }
+    } catch(err) {
+      alert('Fout bij importeren: ' + err.message);
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function renderAll() {
+  renderWeek();
+  renderGoals();
+  if(currentTab==='history') renderHistory();
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────────────
+buildCatButtons();
+updateWeekNav();
+renderWeek();
+renderGoals();
+// Show name if set
+updateHeaderName(getData().name);
+</script>
+</body>
+</html>
