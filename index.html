@@ -16,13 +16,14 @@
   --act-gravel:#a3e635; --act-mtb:#a78bfa; --act-fitness:#ff6b35; --act-stretch:#fbbf24; --act-run:#60a5fa; --act-walk:#34d399;
   --accent:#00d4a8; --success:#00d4a8; --tab-h:64px;
   --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
 #app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto}
 
 /* HEADER */
-.header{padding:52px 20px 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
+.header{padding:calc(var(--safe-top) + 14px) 20px 14px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0}
 .header-top{display:flex;justify-content:space-between;align-items:center}
 .header-label{font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:1px}
 .header-title{font-size:22px;font-weight:800;letter-spacing:-0.5px}
@@ -45,15 +46,11 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 .section-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);margin-bottom:10px;margin-top:20px;padding-bottom:8px;border-bottom:1px solid var(--border)}
 .section-title:first-child{margin-top:0}
 
-/* WEEK NAV */
-.week-nav{display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;gap:8px}
+/* WEEK NAV - now embedded in section-title */
 .week-nav-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--border2);background:var(--surface2);color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .week-nav-btn:active{background:var(--surface3)}
 .week-nav-btn:disabled{opacity:.2;pointer-events:none}
-.week-nav-center{flex:1;text-align:center}
-.week-nav-label{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:2px}
-.week-nav-range{font-size:20px;font-weight:800;letter-spacing:-0.5px}
-.week-nav-today-btn{font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent);background:transparent;border-radius:20px;padding:2px 8px;cursor:pointer;margin-top:4px;display:inline-block;letter-spacing:1px;text-transform:uppercase}
+.week-nav-today-btn{font-size:9px;font-weight:700;color:var(--accent);border:1px solid var(--accent);background:transparent;border-radius:20px;padding:2px 8px;cursor:pointer;display:inline-block;letter-spacing:1px;text-transform:uppercase}
 
 /* CATEGORY QUICK-ADD */
 .cat-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px}
@@ -222,14 +219,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
       <div class="section-title">Activiteit toevoegen</div>
       <div class="cat-buttons" id="catButtons"></div>
 
-      <div class="week-nav">
-        <button class="week-nav-btn" id="prevWeekBtn" onclick="shiftWeek(-1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <div class="week-nav-center">
-          <div class="week-nav-label" id="weekNavLabel"></div>
-          <div class="week-nav-range" id="weekNavRange"></div>
-          <div id="weekNavTodayWrap"></div>
+      <div class="section-title" style="display:flex;flex-direction:column;gap:0;padding-bottom:8px">
+        <div style="display:flex;align-items:center;width:100%;gap:4px">
+          <button class="week-nav-btn" id="prevWeekBtn" onclick="shiftWeek(-1)" style="width:28px;height:28px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div style="flex:1;text-align:center">
+            <div id="weekNavLabel" style="font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;line-height:1.3"></div>
+            <div id="weekNavRange" style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:0;text-transform:none;line-height:1.3"></div>
+          </div>
+          <button class="week-nav-btn" id="nextWeekBtn" onclick="shiftWeek(1)" style="width:28px;height:28px;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
         </div>
-        <button class="week-nav-btn" id="nextWeekBtn" onclick="shiftWeek(1)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        <div id="weekNavTodayWrap" style="width:100%;text-align:center;margin-top:4px"></div>
       </div>
       <div class="week-days" id="weekDays"></div>
     </div>
@@ -337,22 +336,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
   </div>
 </div>
 
-<!-- GOAL EDIT MODAL (week/month per cat) -->
+<!-- GOAL EDIT MODAL (all cats for a period) -->
 <div class="modal-overlay" id="goalEditModal" onclick="closeGoalEdit(event)">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title" id="goalEditTitle">Doel instellen</div>
+    <div class="modal-title" id="goalEditTitle">Doelen instellen</div>
     <input type="hidden" id="goalEditPeriod">
-    <input type="hidden" id="goalEditCat">
-    <div class="stat-grid" style="grid-template-columns:1fr">
-      <div class="stat-field">
-        <div class="stat-label" id="goalEditLabel">Doel</div>
-        <input type="number" class="stat-input" id="goalEditValue" placeholder="0">
-      </div>
-    </div>
+    <div id="goalEditRows" style="display:flex;flex-direction:column;gap:1px;border-radius:10px;overflow:hidden;margin-bottom:14px"></div>
     <div class="modal-row">
-      <button class="btn-primary" style="flex:2" onclick="saveGoalEdit()">Opslaan</button>
-      <button class="btn-ghost" onclick="closeGoalEdit()">Annuleer</button>
+      <button class="btn-primary" style="flex:1" onclick="saveGoalEdit()">Opslaan</button>
+      <button class="btn-ghost" style="flex:1" onclick="closeGoalEdit()">Annuleer</button>
     </div>
   </div>
 </div>
@@ -403,7 +396,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 
 <!-- SETTINGS OVERLAY -->
 <div id="settingsOverlay" style="position:fixed;inset:0 auto;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:var(--bg);z-index:300;display:none;flex-direction:column">
-  <div style="padding:52px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+  <div style="padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
     <div>
       <div style="font-size:10px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:1px">Menu</div>
       <div style="font-size:22px;font-weight:800;letter-spacing:-0.5px">Instellingen</div>
@@ -521,11 +514,15 @@ function getData() {
       week:  { cycling:80, fitness:3, running:20 },
       month: { cycling:300, fitness:12, running:80 },
       year:  { cycling:2000, fitness:100, running:500 }
-    }
+    },
+    hidden: { week: {}, month: {} }
   };
   const d = JSON.parse(localStorage.getItem('sportTracker2') || 'null');
   if (!d) return def;
   if (!d.goals.year) d.goals.year = def.goals.year;
+  if (!d.hidden) d.hidden = { week: {}, month: {} };
+  if (!d.hidden.week) d.hidden.week = {};
+  if (!d.hidden.month) d.hidden.month = {};
   return d;
 }
 function saveData(d) { localStorage.setItem('sportTracker2', JSON.stringify(d)); }
@@ -555,7 +552,7 @@ function updateWeekNav() {
   const label = weekOffset===0?'Deze week':weekOffset===1?'Volgende week':weekOffset===-1?'Vorige week':weekOffset<0?`${Math.abs(weekOffset)} weken geleden`:`Over ${weekOffset} weken`;
   document.getElementById('weekNavLabel').textContent = label;
   document.getElementById('weekNavRange').textContent = `${mon.getDate()} ${MONTHS_NL[mon.getMonth()]} – ${sun.getDate()} ${MONTHS_NL[sun.getMonth()]}`;
-  document.getElementById('weekNavTodayWrap').innerHTML = weekOffset!==0?`<div class="week-nav-today-btn" onclick="goToToday()">Naar vandaag</div>`:'';
+  document.getElementById('weekNavTodayWrap').innerHTML = weekOffset!==0?`<button class="week-nav-today-btn" onclick="goToToday()">Naar vandaag</button>`:'';
   document.getElementById('prevWeekBtn').disabled = weekOffset<=-8;
   document.getElementById('nextWeekBtn').disabled = weekOffset>=4;
 }
@@ -1165,10 +1162,13 @@ function closeEditModal(e) {
 
 
 // ── GOALS ────────────────────────────────────────────────────────────────────
-const GEAR_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`;
+const GEAR_SVG = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`;
 
 function renderCatGoalCard(catKey, period, catProgress, actProgress, goalVal, container) {
   const cat = CATEGORIES[catKey];
+  const data = getData();
+  const isHidden = data.hidden[period][catKey] === true;
+  if (isHidden) return; // skip rendering if hidden
   const current = catProgress[catKey]||0;
   const pct = goalVal>0?Math.min(100,Math.round((current/goalVal)*100)):0;
   const r=16, circ=+(2*Math.PI*r).toFixed(2), offset=+(circ-(pct/100)*circ).toFixed(2);
@@ -1203,7 +1203,7 @@ function renderCatGoalCard(catKey, period, catProgress, actProgress, goalVal, co
         <div class="goal-card-val">${current}<span>${cat.unit==='km'?' km':'x'} / ${goalVal}${cat.unit==='km'?' km':'x'}</span></div>
         <div class="goal-bar-bg"><div class="goal-bar-fill" style="width:${pct}%;background:${cat.hex}"></div></div>
       </div>
-      <button class="goal-gear" onclick="event.stopPropagation();openGoalEdit('${period}','${catKey}',${goalVal})">${GEAR_SVG}</button>
+      <button class="goal-gear" onclick="event.stopPropagation();openGoalEdit('${period}')">${GEAR_SVG}</button>
     </div>
     <div class="goal-breakdown">${breakdownHtml}</div>`;
 
@@ -1230,21 +1230,60 @@ function renderGoals() {
   if(mc){mc.innerHTML=''; Object.keys(CATEGORIES).forEach(c=>renderCatGoalCard(c,'month',mp,mpa,data.goals.month[c]||0,mc));}
 }
 
-function openGoalEdit(period,cat,current) {
-  const c=CATEGORIES[cat];
-  document.getElementById('goalEditPeriod').value=period;
-  document.getElementById('goalEditCat').value=cat;
-  document.getElementById('goalEditValue').value=current;
-  document.getElementById('goalEditTitle').innerHTML=`<span style="display:inline-flex;align-items:center;gap:8px;color:${c.hex}">${c.icon.replace('width="20" height="20"','width="16" height="16"')}</span>${c.name} — ${period==='week'?'Week':'Maand'}doel`;
-  document.getElementById('goalEditLabel').textContent=`Doel (${c.unit})`;
+function openGoalEdit(period) {
+  const d = getData();
+  const periodLabel = period==='week' ? 'Weekdoelen' : 'Maanddoelen';
+  document.getElementById('goalEditPeriod').value = period;
+  document.getElementById('goalEditTitle').textContent = periodLabel;
+
+  const rows = document.getElementById('goalEditRows');
+  rows.innerHTML = '';
+  Object.keys(CATEGORIES).forEach((catKey, i) => {
+    const cat = CATEGORIES[catKey];
+    const current = d.goals[period][catKey] || 0;
+    const isHidden = d.hidden[period][catKey] === true;
+    const isLast = i === Object.keys(CATEGORIES).length - 1;
+    const toggleId = `gtoggle_${catKey}`;
+    const thumbId  = `gthumb_${catKey}`;
+
+    const row = document.createElement('div');
+    row.style.cssText = `display:flex;align-items:center;gap:10px;background:var(--surface2);padding:10px 14px;border-bottom:${isLast?'none':'1px solid var(--border)'}`;
+    row.innerHTML = `
+      <span style="color:${cat.hex};display:inline-flex;flex-shrink:0">${cat.icon.replace('width="20" height="20"','width="16" height="16"')}</span>
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:${cat.hex};flex:1">${cat.name}</span>
+      <span style="font-size:10px;font-weight:600;color:var(--text-muted);margin-right:2px">${cat.unit}</span>
+      <input type="number" id="ge_${catKey}" value="${current}" placeholder="0"
+        style="background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-family:'Inter',sans-serif;font-size:15px;font-weight:700;width:72px;text-align:center;-moz-appearance:textfield;margin-right:6px">
+      <div id="${toggleId}" onclick="toggleGoalVisibility('${catKey}')"
+        style="width:44px;height:24px;border-radius:12px;background:${!isHidden?'var(--success)':'var(--border2)'};position:relative;cursor:pointer;transition:background .2s;flex-shrink:0">
+        <div id="${thumbId}" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--text);transition:transform .2s;transform:${!isHidden?'translateX(20px)':'none'}"></div>
+      </div>`;
+    rows.appendChild(row);
+  });
+
   document.getElementById('goalEditModal').classList.add('open');
-  setTimeout(()=>document.getElementById('goalEditValue').focus(),100);
+}
+
+function toggleGoalVisibility(catKey) {
+  const period = document.getElementById('goalEditPeriod').value;
+  const d = getData();
+  d.hidden[period][catKey] = !d.hidden[period][catKey];
+  saveData(d);
+  // Update toggle UI without closing modal
+  const toggleEl = document.getElementById(`gtoggle_${catKey}`);
+  const thumbEl  = document.getElementById(`gthumb_${catKey}`);
+  const isNowVisible = !d.hidden[period][catKey];
+  if (toggleEl) toggleEl.style.background = isNowVisible ? 'var(--success)' : 'var(--border2)';
+  if (thumbEl)  thumbEl.style.transform   = isNowVisible ? 'translateX(20px)' : 'none';
 }
 function saveGoalEdit() {
-  const period=document.getElementById('goalEditPeriod').value;
-  const cat=document.getElementById('goalEditCat').value;
-  const val=parseFloat(document.getElementById('goalEditValue').value)||0;
-  const d=getData(); d.goals[period][cat]=val; saveData(d);
+  const period = document.getElementById('goalEditPeriod').value;
+  const d = getData();
+  Object.keys(CATEGORIES).forEach(catKey => {
+    const el = document.getElementById('ge_'+catKey);
+    if(el) d.goals[period][catKey] = parseFloat(el.value)||0;
+  });
+  saveData(d);
   closeGoalEdit(); renderGoals();
 }
 function closeGoalEdit(e) {
